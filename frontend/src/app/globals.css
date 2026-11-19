@@ -1,26 +1,75 @@
 @import "tailwindcss";
 
+@theme {
+  --color-primary-navy: #10243A;
+  --color-primary-navy-dark: #0A1726;
+  --color-primary-navy-light: #18375A;
+  --color-secondary-blue: #247BA0;
+  --color-secondary-blue-dark: #1A5C78;
+  --color-secondary-blue-light: #3A92B9;
+  --color-secondary-blue-subtle: #EBF4F8;
+  --color-accent-teal: #24B8A6;
+  --color-accent-teal-dark: #1B9586;
+  --color-accent-teal-light: #4DD4C4;
+  --color-accent-teal-subtle: #E8F8F6;
+  --color-canvas-bg: #F5F8FB;
+  --color-surface-white: #FFFFFF;
+  --color-text-dark: #243447;
+  --color-text-muted: #718096;
+  --color-border-subtle: #E2E8F0;
+  --color-border-focus: #247BA0;
+  --color-emergency-red: #DC2626;
+  --color-emergency-red-dark: #991B1B;
+  --color-emergency-red-bg: #FEF2F2;
+  --color-emergency-red-border: #FCA5A5;
+  --color-amber-warning: #D97706;
+  --color-amber-warning-dark: #92400E;
+  --color-amber-warning-bg: #FFFBEB;
+  --color-amber-warning-border: #FCD34D;
+  --color-success-green: #10B981;
+  --color-success-green-bg: #ECFDF5;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #F5F8FB;
+  --foreground: #243447;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
+  color-scheme: light;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #F5F8FB;
+  color: #243447;
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar for modern subtle appearance */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+@media print {
+  header, footer, nav, #hero-section, #presets-bar, .no-print {
+    display: none !important;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+  }
 }
