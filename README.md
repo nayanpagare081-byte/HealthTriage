@@ -75,22 +75,32 @@ probability or actual measure of patient risk.
 ``` text
 HealthTriage/
 ├── backend/
-│   └── app/
-│       ├── inference/
-│       │   ├── backward_chaining.py
-│       │   ├── certainty_factor.py
-│       │   └── forward_chaining.py
-│       ├── knowledge_base/
-│       │   └── rules.py
-│       ├── models/
-│       │   └── patient.py
-│       ├── services/
-│       │   └── triage_service.py
-│       └── main.py
+│   ├── app/
+│   │   ├── inference/
+│   │   │   ├── backward_chaining.py
+│   │   │   ├── certainty_factor.py
+│   │   │   └── forward_chaining.py
+│   │   ├── knowledge_base/
+│   │   │   └── rules.py
+│   │   ├── models/
+│   │   │   └── patient.py
+│   │   ├── services/
+│   │   │   └── triage_service.py
+│   │   └── main.py
+│   ├── tests/
+│   │   ├── test_api.py
+│   │   ├── test_backward_chaining.py
+│   │   ├── test_certainty_factor.py
+│   │   ├── test_forward_chaining.py
+│   │   └── test_rules.py
+│   └── requirements.txt
 ├── frontend/
 │   ├── public/
 │   ├── src/
-│   │   └── app/
+│   │   ├── app/
+│   │   ├── components/
+│   │   ├── data/
+│   │   └── types/
 │   ├── package.json
 │   └── package-lock.json
 └── .gitignore
@@ -112,8 +122,14 @@ cd backend
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-python -m pip install fastapi uvicorn pydantic
+python -m pip install -r requirements.txt
 python -m uvicorn app.main:app --reload
+```
+
+Run automated backend tests:
+
+``` powershell
+python -m pytest
 ```
 
 Backend URLs:
@@ -121,6 +137,7 @@ Backend URLs:
 -   API: http://127.0.0.1:8000
 -   API documentation: http://127.0.0.1:8000/docs
 -   Health check: http://127.0.0.1:8000/health
+-   Rules reference: http://127.0.0.1:8000/api/rules
 
 Keep this terminal running.
 
