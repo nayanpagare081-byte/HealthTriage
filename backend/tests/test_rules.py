@@ -9,16 +9,16 @@ from app.knowledge_base.rules import (
 
 
 def test_knowledge_base_rule_count():
-    """Knowledge base must contain exactly 40 clinical production rules."""
+    """Knowledge base must contain exactly 41 clinical production rules."""
     rules = get_all_rules()
-    assert len(rules) == 40
+    assert len(rules) == 41
 
 
-def test_rule_ids_r001_to_r040():
-    """All rule IDs from R001 to R040 must be uniquely registered."""
+def test_rule_ids_r001_to_r041():
+    """All rule IDs from R001 to R041 must be uniquely registered."""
     rules = get_all_rules()
     rule_ids = {r.rule_id for r in rules}
-    expected_ids = {f"R0{i:02d}" for i in range(1, 41)}
+    expected_ids = {f"R0{i:02d}" for i in range(1, 42)}
     assert rule_ids == expected_ids
 
 
@@ -244,5 +244,89 @@ def test_chest_pain_severity_3_age_25_must_not_be_emergency():
     )
     result = service.assess(patient)
     assert result["tier"] != "emergency", f"Mild chest pain without red flag must NOT be emergency, got '{result['tier']}'"
+
+
+def test_urgent_rule_low_cf_plus_self_care_rule_high_cf_returns_urgent():
+    """
+    OVER-ESCALATION REQUIREMENT:
+    Select the highest-urgency tier among all fired non-override rules regardless
+    of the confidence threshold.
+    Test: urgent rule CF 0.30 plus self_care rule CF 0.80 must return the urgent tier.
+    """
+    from unittest.mock import MagicMock
+    from app.inference.forward_chaining import FiredRuleDetail, InferenceResult
+    from app.models.patient import PatientInput
+    from app.services.triage_service import TriageService
+
+    service = TriageService(confidence_threshold=0.35)
+
+    # Mock forward chaining engine to simulate firing an urgent rule (CF 0.30)
+    # and a self-care rule (CF 0.80)
+    mock_forward_result = InferenceResult(
+        facts={"symptom:chest_pain", "symptom:headache", "urgent_care_today", "self_care"},
+        conclusions={"urgent_care_today", "self_care"},
+        activated_rules=["R_MOCK_URGENT", "R_MOCK_SELF_CARE"],
+        reasoning_trace=["urgent fired with 0.30", "self_care fired with 0.80"],
+        fired_rule_details=[
+            FiredRuleDetail(
+                rule_id="R_MOCK_URGENT",
+                name="Mock Urgent Rule",
+                tier="urgent_care_today",
+                certainty_factor=0.30,
+                source="Clinical guideline",
+                matched_conditions=["symptom:chest_pain"],
+                explanation="Urgent condition",
+                override=False,
+            ),
+            FiredRuleDetail(
+                rule_id="R_MOCK_SELF_CARE",
+                name="Mock Self-Care Rule",
+                tier="self_care",
+                certainty_factor=0.80,
+                source="Home care guideline",
+                matched_conditions=["symptom:headache"],
+                explanation="Mild condition",
+                override=False,
+            ),
+        ],
+    )
+
+    service.forward_engine.run = MagicMock(return_value=mock_forward_result)
+
+    patient = PatientInput(
+        age=30,
+        symptoms=["chest pain", "headache"],
+        severity=5,
+        duration_hours=12.0,
+    )
+    result = service.assess(patient)
+    assert result["tier"] == "urgent_care_today", (
+        f"Expected urgent_care_today regardless of CF 0.30 vs 0.80, got '{result['tier']}'"
+    )
+
+
+def test_40_year_old_diabetic_with_chest_discomfort_returns_urgent_care():
+    """
+    R041 RESTORATION REQUIREMENT:
+    A 40-year-old with diabetes and chest discomfort must return at least urgent_care_today.
+    """
+    from app.models.patient import PatientInput
+    from app.services.triage_service import TriageService
+
+    service = TriageService()
+    patient = PatientInput(
+        age=40,
+        symptoms=["chest discomfort"],
+        risk_factors=["diabetes"],
+        severity=4,
+        duration_hours=6.0,
+        warning_signs=[],
+    )
+    result = service.assess(patient)
+    assert result["tier"] in ["urgent_care_today", "emergency"], (
+        f"Expected at least urgent_care_today, got '{result['tier']}'"
+    )
+    assert "R041" in result["activated_rules"], f"Expected R041 to fire, got {result['activated_rules']}"
+
 
 

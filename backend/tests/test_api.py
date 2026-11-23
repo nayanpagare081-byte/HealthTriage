@@ -25,11 +25,12 @@ def test_list_rules_endpoint():
     assert response.status_code == 200
     rules = response.json()
     assert isinstance(rules, list)
-    assert len(rules) == 40
+    assert len(rules) == 41
     rule_ids = [r["rule_id"] for r in rules]
     assert "R001" in rule_ids
     assert "R008" in rule_ids
     assert "R040" in rule_ids
+    assert "R041" in rule_ids
 
 
 def test_triage_emergency_escalation():

@@ -177,7 +177,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=1.0,
         override=True,
         priority=100,
-        source="UNVERIFIED - needs team review (NHS Emergency 999 Guidelines | URL: https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-call-999/ | Section: Signs of a medical emergency | Threshold: Difficulty breathing, such as breathing very fast, gasping, or feeling like you cannot catch your breath -> Call 999 immediately; live external page not opened via agent tool step in session)",
+        source="UNVERIFIED - needs team review (NHS 111 'check it\'s not an emergency' | URL: https://111.nhs.uk/triage/check-its-not-an-emergency | Threshold: Severe difficulty breathing -> Call 999 immediately)",
         explanation_template="Severe breathing difficulty is a critical red flag requiring immediate emergency evaluation.",
     ),
     ProductionRule(
@@ -192,7 +192,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=1.0,
         override=True,
         priority=100,
-        source="UNVERIFIED - needs team review (NHS Emergency 999 Guidelines | URL: https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-call-999/ | Section: Signs of a medical emergency | Threshold: Chest pain, pressure, heaviness, tightness or squeezing across the chest -> Call 999 immediately; live external page not opened via agent tool step in session)",
+        source="UNVERIFIED - needs team review (NHS 111 'check it\'s not an emergency' | URL: https://111.nhs.uk/triage/check-its-not-an-emergency | Threshold: Heavy central crushing chest pain or pressure -> Call 999 immediately)",
         explanation_template="Acute central crushing chest pain or pressure requires immediate emergency intervention for potential acute coronary syndrome.",
     ),
     ProductionRule(
@@ -207,7 +207,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=1.0,
         override=True,
         priority=100,
-        source="UNVERIFIED - needs team review (NHS Emergency 999 Guidelines | URL: https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-call-999/ | Section: Signs of a medical emergency | Threshold: Loss of consciousness, collapse or fainting and not waking up -> Call 999 immediately; live external page not opened via agent tool step in session)",
+        source="UNVERIFIED - needs team review (NHS 111 'check it\'s not an emergency' | URL: https://111.nhs.uk/triage/check-its-not-an-emergency | Threshold: Loss of consciousness, fainting, or collapse -> Call 999 immediately)",
         explanation_template="Unconsciousness or unresponsiveness is an immediate life-threatening emergency.",
     ),
     ProductionRule(
@@ -222,7 +222,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=1.0,
         override=True,
         priority=100,
-        source="UNVERIFIED - needs team review (NHS Emergency 999 Guidelines | URL: https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-call-999/ | Section: Signs of a medical emergency | Threshold: Sudden, severe confusion or delirium, inability to talk or be understood -> Call 999 immediately; live external page not opened via agent tool step in session)",
+        source="UNVERIFIED - needs team review (NHS 111 'check it\'s not an emergency' | URL: https://111.nhs.uk/triage/check-its-not-an-emergency | Threshold: Sudden new confusion or delirium, inability to speak -> Call 999 immediately)",
         explanation_template="Sudden onset of confusion or altered mental state can indicate stroke, severe sepsis, or acute cerebral hypoperfusion.",
     ),
     ProductionRule(
@@ -237,7 +237,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=1.0,
         override=True,
         priority=100,
-        source="UNVERIFIED - needs team review (NHS Emergency 999 Guidelines | URL: https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-call-999/ | Section: Signs of a medical emergency | Threshold: Heavy bleeding that won't stop with direct, firm pressure -> Call 999 immediately; live external page not opened via agent tool step in session)",
+        source="UNVERIFIED - needs team review (NHS 111 'check it\'s not an emergency' | URL: https://111.nhs.uk/triage/check-its-not-an-emergency | Threshold: Heavy bleeding that won't stop -> Call 999 immediately)",
         explanation_template="Severe hemorrhage that cannot be stemmed by direct pressure requires immediate trauma/emergency care.",
     ),
     ProductionRule(
@@ -252,7 +252,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=1.0,
         override=True,
         priority=100,
-        source="UNVERIFIED - needs team review (NHS Emergency 999 Guidelines | URL: https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-call-999/ | Section: Signs of a medical emergency | Threshold: Signs of a stroke (FAST): facial weakness/droop, arm weakness, speech difficulty -> Call 999 immediately; live external page not opened via agent tool step in session)",
+        source="UNVERIFIED - needs team review (NHS 111 'check it\'s not an emergency' | URL: https://111.nhs.uk/triage/check-its-not-an-emergency | Threshold: Stroke symptoms [FAST]: face drooping, arm weakness, speech difficulty -> Call 999 immediately)",
         explanation_template="Facial droop, arm weakness, or speech difficulty indicate suspected acute stroke requiring urgent thrombolysis pathway.",
     ),
     ProductionRule(
@@ -267,7 +267,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=1.0,
         override=True,
         priority=100,
-        source="UNVERIFIED - needs team review (NHS Emergency 999 Guidelines | URL: https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-call-999/ | Section: Signs of a medical emergency | Threshold: Severe allergic reaction with throat swelling, respiratory distress, or cyanosis -> Call 999 immediately; live external page not opened via agent tool step in session)",
+        source="UNVERIFIED - needs team review (NHS 111 'check it\'s not an emergency' | URL: https://111.nhs.uk/triage/check-its-not-an-emergency | Threshold: Severe allergic reaction [anaphylaxis] with airway swelling or breathing distress -> Call 999 immediately)",
         explanation_template="Rapidly progressing swelling of the airway, tongue, or lips with respiratory distress indicates anaphylaxis.",
     ),
     ProductionRule(
@@ -282,7 +282,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=1.0,
         override=True,
         priority=100,
-        source="UNVERIFIED - needs team review (NHS Emergency 999 Guidelines | URL: https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-call-999/ | Section: Signs of a medical emergency | Threshold: Coughing up significant frank blood -> Call 999 immediately; live external page not opened via agent tool step in session)",
+        source="UNVERIFIED - needs team review (NHS 111 'check it\'s not an emergency' | URL: https://111.nhs.uk/triage/check-its-not-an-emergency | Threshold: Coughing up frank blood -> Call 999 immediately)",
         explanation_template="Coughing up frank blood is a red-flag sign of serious pulmonary hemorrhage, vascular lesion, or pulmonary embolism.",
     ),
 
@@ -303,7 +303,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=0.95,
         override=False,
         priority=80,
-        source="UNVERIFIED - needs team review (NICE Guideline NG143 | URL: https://www.nice.org.uk/guidance/ng143/chapter/Recommendations | Section: 1.2 Table 1 Red category | Threshold: Age <3 months with temperature >=38.0°C is Red flag requiring immediate hospital referral; live external page not opened via agent tool step in session)",
+        source="UNVERIFIED - needs team review (NICE Guideline NG143 | Traffic light table [table 2] | URL: https://www.nice.org.uk/guidance/ng143/chapter/Recommendations | Threshold: Age <3 months with temperature >=38.0°C is Red flag requiring immediate hospital assessment)",
         explanation_template="Infant under 3 months with fever is a Red flag indicator for invasive bacterial infection requiring immediate hospital pediatric evaluation.",
     ),
     ProductionRule(
@@ -322,7 +322,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=0.85,
         override=False,
         priority=70,
-        source="UNVERIFIED - needs team review (NICE Guideline NG143 | URL: https://www.nice.org.uk/guidance/ng143/chapter/Recommendations | Section: 1.2 Table 1 Amber category | Threshold: Age 3-6 months with temperature >=39.0°C is Amber flag requiring same-day clinical assessment; live external page not opened via agent tool step in session)",
+        source="UNVERIFIED - needs team review (NICE Guideline NG143 | Traffic light table [table 2] | URL: https://www.nice.org.uk/guidance/ng143/chapter/Recommendations | Threshold: Age 3-6 months with temperature >=39.0°C is Amber flag requiring same-day clinical assessment)",
         explanation_template="High fever in an infant aged 3-6 months is an Amber flag requiring same-day face-to-face clinical review.",
     ),
     ProductionRule(
@@ -338,7 +338,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=0.80,
         override=False,
         priority=60,
-        source="UNVERIFIED - needs team review (NICE Guideline NG143 Section 1.2 Table 1 Amber category specifies fever for >=5 days strictly within pediatric scope under 5 years; generalizing this threshold to older children and adults is an unverified clinical extrapolation)",
+        source="UNVERIFIED - needs team review (NICE Guideline NG143 | Traffic light table [table 2] | URL: https://www.nice.org.uk/guidance/ng143/chapter/Recommendations | Threshold: Fever for >=5 days is Amber flag in under 5s; unverified for older ages)",
         explanation_template="Fever persisting for 5 or more days (120+ hours) requires medical assessment to exclude atypical or systemic infections.",
     ),
     ProductionRule(
@@ -838,6 +838,23 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         priority=60,
         source="UNVERIFIED - needs team review (Minimum see_doctor_soon tier applied to all chest pain variants per safety protocol; costochondritis requires clinical palpation and ECG exclusion of ACS)",
         explanation_template="Chest pain reproduced on localized chest wall tenderness suggests musculoskeletal strain (e.g., costochondritis), but medical evaluation is advised to safely exclude cardiac etiologies.",
+    ),
+    ProductionRule(
+        rule_id="R041",
+        name="Atypical chest discomfort in diabetic or elderly patient",
+        cluster="chest_pain",
+        conditions=RuleConditions(
+            symptoms=frozenset({"chest_pain"}),
+            risk_factors=frozenset({"diabetes"}),
+            min_severity=4,
+            required_facts=frozenset({"symptom:chest_pain", "risk:diabetes"}),
+        ),
+        tier=TriageTier.URGENT_CARE_TODAY,
+        certainty_factor=0.85,
+        override=False,
+        priority=75,
+        source="UNVERIFIED - needs team review (NICE CG95 notes atypical cardiac symptoms in diabetes, but rule formulation and severity cutoff >=4 is an app synthesis without direct tool verification in session)",
+        explanation_template="Diabetic patients frequently experience atypical or blunted cardiac ischaemic symptoms and require urgent same-day evaluation.",
     ),
 ]
 

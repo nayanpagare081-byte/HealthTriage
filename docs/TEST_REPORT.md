@@ -6,8 +6,8 @@ This report documents the verification and test execution of the **Health Triage
 
 ## Executive Summary
 
-- **Total Test Cases Executed**: 57
-- **Passed**: 57 (100%)
+- **Total Test Cases Executed**: 59
+- **Passed**: 59 (100%)
 - **Failed**: 0 (0%)
 - **Execution Date**: 2026-11-23
 - **Test Runner**: Pytest 9.2.0 on Python 3.14.8 (Windows)
@@ -105,7 +105,7 @@ To evaluate the impact of strict certainty requirements and the new over-escalat
 
 | Test File | Target Module | Scope | Tests Run | Pass / Fail |
 | :--- | :--- | :--- | :--- | :--- |
-| `tests/test_rules.py` | `knowledge_base/rules.py` | Rule count, ID indexing, override flags, self-care guards, R040 chest safety test, low-CF fallback test, chest-pain gap tests | 13 | 13 / 0 |
+| `tests/test_rules.py` | `knowledge_base/rules.py` | Rule count, ID indexing, override flags, self-care guards, R040 chest safety test, low-CF fallback test, chest-pain gap tests, R041 restoration test | 15 | 15 / 0 |
 | `tests/test_certainty_factor.py` | `inference/certainty_factor.py` | MYCIN formula, range checks, score combination | 6 | 6 / 0 |
 | `tests/test_forward_chaining.py` | `inference/forward_chaining.py` | Fixed-point loop, fact derivation, self-care blocking | 6 | 6 / 0 |
 | `tests/test_backward_chaining.py` | `inference/backward_chaining.py` | Goal verification, adaptive question selection | 4 | 4 / 0 |

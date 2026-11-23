@@ -85,32 +85,24 @@ class TriageService:
             selected_tier = TriageTier.NO_RULE_MATCHED.value
             selected_cf = 0.0
         else:
-            # Select the highest-urgency tier whose combined CF passes threshold.
-            # Fail towards over-escalation if multiple tiers or low confidence.
-            chosen = None
-            for tier in urgency_ranked_tiers:
-                t_val = tier.value
-                if t_val in tier_cfs and tier_cfs[t_val] >= self.confidence_threshold:
-                    chosen = (t_val, tier_cfs[t_val])
-                    break
+            # Select the highest-urgency tier among all fired non-override rules
+            # regardless of the confidence threshold (failing toward over-escalation).
+            # The threshold is retained to evaluate and display confidence.
+            highest_tier = max(
+                tier_groups.keys(),
+                key=lambda t: TIER_URGENCY_RANK.get(TriageTier(t), 0),
+            )
+            combined_cf = tier_cfs.get(highest_tier, 0.5)
 
-            if chosen:
-                selected_tier, selected_cf = chosen
+            # CRITICAL SAFETY REQUIREMENT: Never return self_care when certainty falls
+            # below the confidence threshold (lowest-confidence fallback).
+            # If the fallback picks self_care, escalate to see_doctor_routine.
+            if highest_tier == TriageTier.SELF_CARE.value and combined_cf < self.confidence_threshold:
+                selected_tier = TriageTier.SEE_DOCTOR_ROUTINE.value
+                selected_cf = combined_cf
             else:
-                # If no tier passed the threshold, pick the highest urgency tier among fired rules
-                # (fail toward over-escalation).
-                # CRITICAL SAFETY REQUIREMENT: Never return self_care when no tier passed
-                # the confidence threshold. If fallback picks self_care, escalate to see_doctor_routine.
-                highest_tier = max(
-                    tier_groups.keys(),
-                    key=lambda t: TIER_URGENCY_RANK.get(TriageTier(t), 0),
-                )
-                if highest_tier == TriageTier.SELF_CARE.value:
-                    selected_tier = TriageTier.SEE_DOCTOR_ROUTINE.value
-                    selected_cf = tier_cfs.get(highest_tier, 0.5)
-                else:
-                    selected_tier = highest_tier
-                    selected_cf = tier_cfs.get(highest_tier, 0.5)
+                selected_tier = highest_tier
+                selected_cf = combined_cf
 
         # Backward compatible outcome string
         if selected_tier == TriageTier.EMERGENCY.value:
