@@ -170,3 +170,79 @@ def test_r040_chest_wall_tenderness_cannot_return_self_care():
     assert result["tier"] == "see_doctor_soon", f"Expected 'see_doctor_soon', got '{result['tier']}'"
     assert "R040" in result["activated_rules"], f"Expected R040 to fire, but got {result['activated_rules']}"
 
+
+def test_low_cf_self_care_fallback_never_returns_self_care():
+    """
+    CRITICAL OVER-ESCALATION REQUIREMENT:
+    Never return self_care when no tier passed the confidence threshold.
+    If the fallback picks self_care, return see_doctor_routine instead.
+    """
+    from app.models.patient import PatientInput
+    from app.services.triage_service import TriageService
+
+    # R023 (mild tension headache) fires with CF=0.80. Setting confidence_threshold=0.85
+    # ensures R023 does not pass the threshold in the main tier selection loop.
+    service = TriageService(confidence_threshold=0.85)
+    patient = PatientInput(
+        age=25,
+        symptoms=["headache"],
+        severity=3,
+        duration_hours=12.0,
+        risk_factors=[],
+        warning_signs=[],
+    )
+    result = service.assess(patient)
+    assert result["tier"] != "self_care", "Low-CF self-care fallback must NEVER return self_care"
+    assert result["tier"] == "see_doctor_routine", f"Expected see_doctor_routine, got '{result['tier']}'"
+    assert "R023" in result["activated_rules"]
+
+
+def test_chest_pain_severity_9_age_60_no_checkbox():
+    """
+    CHEST-PAIN GAP REQUIREMENT:
+    If symptom:chest_pain is present without the chest_pain warning sign,
+    and severity >= 7 OR (age >= 50 AND any risk factor),
+    the result must be at least urgent_care_today.
+    Case 1: symptom chest pain, severity 9, age 60, no warning checkbox.
+    """
+    from app.models.patient import PatientInput
+    from app.services.triage_service import TriageService
+
+    service = TriageService()
+    patient = PatientInput(
+        age=60,
+        symptoms=["chest pain"],
+        severity=9,
+        duration_hours=4.0,
+        risk_factors=[],
+        warning_signs=[],
+    )
+    result = service.assess(patient)
+    assert result["tier"] in ["urgent_care_today", "emergency"], (
+        f"Expected at least urgent_care_today, got '{result['tier']}'"
+    )
+    assert "R039" in result["activated_rules"]
+
+
+def test_chest_pain_severity_3_age_25_must_not_be_emergency():
+    """
+    CHEST-PAIN GAP REQUIREMENT:
+    Case 2: symptom chest pain, severity 3, age 25, no warning checkbox.
+    Must NOT be emergency.
+    """
+    from app.models.patient import PatientInput
+    from app.services.triage_service import TriageService
+
+    service = TriageService()
+    patient = PatientInput(
+        age=25,
+        symptoms=["chest pain"],
+        severity=3,
+        duration_hours=4.0,
+        risk_factors=[],
+        warning_signs=[],
+    )
+    result = service.assess(patient)
+    assert result["tier"] != "emergency", f"Mild chest pain without red flag must NOT be emergency, got '{result['tier']}'"
+
+

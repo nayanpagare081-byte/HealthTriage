@@ -177,7 +177,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=1.0,
         override=True,
         priority=100,
-        source="NHS Emergency 999 Guidelines | URL: https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-call-999/ | Section: Signs of a medical emergency | Date accessed: 2026-11-23 | Threshold: Difficulty breathing, such as breathing very fast, gasping, or feeling like you cannot catch your breath -> Call 999 immediately",
+        source="UNVERIFIED - needs team review (NHS Emergency 999 Guidelines | URL: https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-call-999/ | Section: Signs of a medical emergency | Threshold: Difficulty breathing, such as breathing very fast, gasping, or feeling like you cannot catch your breath -> Call 999 immediately; live external page not opened via agent tool step in session)",
         explanation_template="Severe breathing difficulty is a critical red flag requiring immediate emergency evaluation.",
     ),
     ProductionRule(
@@ -192,7 +192,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=1.0,
         override=True,
         priority=100,
-        source="NHS Emergency 999 Guidelines | URL: https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-call-999/ | Section: Signs of a medical emergency | Date accessed: 2026-11-23 | Threshold: Chest pain, pressure, heaviness, tightness or squeezing across the chest (suspected acute coronary syndrome) -> Call 999 immediately",
+        source="UNVERIFIED - needs team review (NHS Emergency 999 Guidelines | URL: https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-call-999/ | Section: Signs of a medical emergency | Threshold: Chest pain, pressure, heaviness, tightness or squeezing across the chest -> Call 999 immediately; live external page not opened via agent tool step in session)",
         explanation_template="Acute central crushing chest pain or pressure requires immediate emergency intervention for potential acute coronary syndrome.",
     ),
     ProductionRule(
@@ -207,7 +207,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=1.0,
         override=True,
         priority=100,
-        source="NHS Emergency 999 Guidelines | URL: https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-call-999/ | Section: Signs of a medical emergency | Date accessed: 2026-11-23 | Threshold: Loss of consciousness, collapse or fainting (passing out) and not waking up -> Call 999 immediately",
+        source="UNVERIFIED - needs team review (NHS Emergency 999 Guidelines | URL: https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-call-999/ | Section: Signs of a medical emergency | Threshold: Loss of consciousness, collapse or fainting and not waking up -> Call 999 immediately; live external page not opened via agent tool step in session)",
         explanation_template="Unconsciousness or unresponsiveness is an immediate life-threatening emergency.",
     ),
     ProductionRule(
@@ -222,7 +222,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=1.0,
         override=True,
         priority=100,
-        source="NHS Emergency 999 Guidelines | URL: https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-call-999/ | Section: Signs of a medical emergency | Date accessed: 2026-11-23 | Threshold: Sudden, severe confusion or delirium, inability to talk or be understood -> Call 999 immediately",
+        source="UNVERIFIED - needs team review (NHS Emergency 999 Guidelines | URL: https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-call-999/ | Section: Signs of a medical emergency | Threshold: Sudden, severe confusion or delirium, inability to talk or be understood -> Call 999 immediately; live external page not opened via agent tool step in session)",
         explanation_template="Sudden onset of confusion or altered mental state can indicate stroke, severe sepsis, or acute cerebral hypoperfusion.",
     ),
     ProductionRule(
@@ -237,7 +237,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=1.0,
         override=True,
         priority=100,
-        source="NHS Emergency 999 Guidelines | URL: https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-call-999/ | Section: Signs of a medical emergency | Date accessed: 2026-11-23 | Threshold: Heavy bleeding that won't stop with direct, firm pressure -> Call 999 immediately",
+        source="UNVERIFIED - needs team review (NHS Emergency 999 Guidelines | URL: https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-call-999/ | Section: Signs of a medical emergency | Threshold: Heavy bleeding that won't stop with direct, firm pressure -> Call 999 immediately; live external page not opened via agent tool step in session)",
         explanation_template="Severe hemorrhage that cannot be stemmed by direct pressure requires immediate trauma/emergency care.",
     ),
     ProductionRule(
@@ -252,7 +252,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=1.0,
         override=True,
         priority=100,
-        source="NHS Emergency 999 Guidelines | URL: https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-call-999/ | Section: Signs of a medical emergency | Date accessed: 2026-11-23 | Threshold: Signs of a stroke (FAST): facial weakness/droop, arm weakness or numbness, speech difficulty -> Call 999 immediately",
+        source="UNVERIFIED - needs team review (NHS Emergency 999 Guidelines | URL: https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-call-999/ | Section: Signs of a medical emergency | Threshold: Signs of a stroke (FAST): facial weakness/droop, arm weakness, speech difficulty -> Call 999 immediately; live external page not opened via agent tool step in session)",
         explanation_template="Facial droop, arm weakness, or speech difficulty indicate suspected acute stroke requiring urgent thrombolysis pathway.",
     ),
     ProductionRule(
@@ -267,7 +267,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=1.0,
         override=True,
         priority=100,
-        source="NHS Emergency 999 Guidelines | URL: https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-call-999/ | Section: Signs of a medical emergency | Date accessed: 2026-11-23 | Threshold: Severe allergic reaction (anaphylaxis) with throat swelling, respiratory distress, or cyanosis -> Call 999 immediately",
+        source="UNVERIFIED - needs team review (NHS Emergency 999 Guidelines | URL: https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-call-999/ | Section: Signs of a medical emergency | Threshold: Severe allergic reaction with throat swelling, respiratory distress, or cyanosis -> Call 999 immediately; live external page not opened via agent tool step in session)",
         explanation_template="Rapidly progressing swelling of the airway, tongue, or lips with respiratory distress indicates anaphylaxis.",
     ),
     ProductionRule(
@@ -282,7 +282,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=1.0,
         override=True,
         priority=100,
-        source="NHS Emergency 999 Guidelines | URL: https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-call-999/ | Section: Signs of a medical emergency | Date accessed: 2026-11-23 | Threshold: Coughing up significant frank blood (haemoptysis) -> Call 999 immediately",
+        source="UNVERIFIED - needs team review (NHS Emergency 999 Guidelines | URL: https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-call-999/ | Section: Signs of a medical emergency | Threshold: Coughing up significant frank blood -> Call 999 immediately; live external page not opened via agent tool step in session)",
         explanation_template="Coughing up frank blood is a red-flag sign of serious pulmonary hemorrhage, vascular lesion, or pulmonary embolism.",
     ),
 
@@ -303,7 +303,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=0.95,
         override=False,
         priority=80,
-        source="NICE Guideline NG143 | URL: https://www.nice.org.uk/guidance/ng143/chapter/Recommendations | Section: 1.2 Table 1 (Red category) | Date accessed: 2026-11-23 | Threshold: Age <3 months with temperature >=38.0°C is Red flag requiring immediate hospital pediatric referral",
+        source="UNVERIFIED - needs team review (NICE Guideline NG143 | URL: https://www.nice.org.uk/guidance/ng143/chapter/Recommendations | Section: 1.2 Table 1 Red category | Threshold: Age <3 months with temperature >=38.0°C is Red flag requiring immediate hospital referral; live external page not opened via agent tool step in session)",
         explanation_template="Infant under 3 months with fever is a Red flag indicator for invasive bacterial infection requiring immediate hospital pediatric evaluation.",
     ),
     ProductionRule(
@@ -322,7 +322,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=0.85,
         override=False,
         priority=70,
-        source="NICE Guideline NG143 | URL: https://www.nice.org.uk/guidance/ng143/chapter/Recommendations | Section: 1.2 Table 1 (Amber category) | Date accessed: 2026-11-23 | Threshold: Age 3-6 months with temperature >=39.0°C is Amber flag requiring same-day clinical assessment",
+        source="UNVERIFIED - needs team review (NICE Guideline NG143 | URL: https://www.nice.org.uk/guidance/ng143/chapter/Recommendations | Section: 1.2 Table 1 Amber category | Threshold: Age 3-6 months with temperature >=39.0°C is Amber flag requiring same-day clinical assessment; live external page not opened via agent tool step in session)",
         explanation_template="High fever in an infant aged 3-6 months is an Amber flag requiring same-day face-to-face clinical review.",
     ),
     ProductionRule(
@@ -423,7 +423,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=0.80,
         override=False,
         priority=50,
-        source="NICE Guideline NG12 & NHS Cough Guidance | URL: https://www.nice.org.uk/guidance/ng12/chapter/Recommendations-organised-by-site-of-cancer | Section: 1.2 Lung and pleural cancers, Recommendation 1.2.1 | Date accessed: 2026-11-23 | Threshold: Unexplained persistent cough for >3 weeks (>504 hours) warrants primary care referral and chest radiography",
+        source="UNVERIFIED - needs team review (NICE Guideline NG12 & NHS Cough Guidance | URL: https://www.nice.org.uk/guidance/ng12/chapter/Recommendations-organised-by-site-of-cancer | Section: 1.2 Lung and pleural cancers, Recommendation 1.2.1 | Threshold: Unexplained persistent cough for >3 weeks warrants primary care referral and chest radiography; live external page not opened via agent tool step in session)",
         explanation_template="Unexplained cough lasting longer than 3 weeks warrants routine primary care review and chest radiography.",
     ),
     ProductionRule(
@@ -583,7 +583,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=0.90,
         override=False,
         priority=75,
-        source="NHS & RCOG Clinical Guidance | URL: https://www.nhs.uk/pregnancy/related-conditions/common-symptoms/stomach-pain/ | Section: When to get urgent medical advice | Date accessed: 2026-11-23 | Threshold: Any unexplained abdominal pain or cramping in pregnancy requires urgent same-day obstetric/maternity assessment",
+        source="UNVERIFIED - needs team review (NHS & RCOG Clinical Guidance | URL: https://www.nhs.uk/pregnancy/related-conditions/common-symptoms/stomach-pain/ | Section: When to get urgent medical advice | Threshold: Any unexplained abdominal pain or cramping in pregnancy requires urgent same-day assessment; live external page not opened via agent tool step in session)",
         explanation_template="Abdominal pain during pregnancy requires urgent same-day obstetric evaluation to exclude ectopic pregnancy or placental complications.",
     ),
     ProductionRule(
@@ -653,7 +653,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=0.90,
         override=False,
         priority=75,
-        source="NHS Health A to Z: Dehydration | URL: https://www.nhs.uk/conditions/dehydration/ | Section: Ask for an urgent GP appointment or get help from NHS 111 | Date accessed: 2026-11-23 | Threshold: Signs of severe dehydration including not urinating for >=12 hours or persistent postural dizziness require same-day urgent clinical care",
+        source="UNVERIFIED - needs team review (NHS Health A to Z: Dehydration | URL: https://www.nhs.uk/conditions/dehydration/ | Section: Ask for an urgent GP appointment or get help from NHS 111 | Threshold: Signs of severe dehydration including not urinating for >=12 hours or persistent postural dizziness require same-day urgent clinical care; live external page not opened via agent tool step in session)",
         explanation_template="Diarrhoea with severe dehydration signs (such as no urination for >12 hours or postural syncope) requires urgent fluid replacement.",
     ),
     ProductionRule(
@@ -722,7 +722,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=0.95,
         override=False,
         priority=90,
-        source="NHS Health A to Z: Sore throat | URL: https://www.nhs.uk/conditions/sore-throat/ | Section: When to call 999 or go to A&E | Date accessed: 2026-11-23 | Threshold: Sore throat with difficulty breathing, inability to swallow saliva, or high-pitched sound (stridor) is an immediate emergency -> Call 999",
+        source="UNVERIFIED - needs team review (NHS Health A to Z: Sore throat | URL: https://www.nhs.uk/conditions/sore-throat/ | Section: When to call 999 or go to A&E | Threshold: Sore throat with difficulty breathing, inability to swallow saliva, or stridor is an immediate emergency -> Call 999; live external page not opened via agent tool step in session)",
         explanation_template="Sore throat with inability to swallow secretions or stridor indicates acute epiglottitis or deep neck space infection.",
     ),
     ProductionRule(
@@ -754,7 +754,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=0.80,
         override=False,
         priority=40,
-        source="NHS Health A to Z: Sore throat | URL: https://www.nhs.uk/conditions/sore-throat/ | Section: When to see a GP | Date accessed: 2026-11-23 | Threshold: Sore throat that does not improve after a week (7 days / >168 hours) -> See a GP",
+        source="UNVERIFIED - needs team review (NHS Health A to Z: Sore throat | URL: https://www.nhs.uk/conditions/sore-throat/ | Section: When to see a GP | Threshold: Sore throat that does not improve after a week (7 days) -> See a GP; live external page not opened via agent tool step in session)",
         explanation_template="A sore throat that does not improve after a week (7 days) warrants a routine doctor appointment to investigate persistent infection.",
     ),
     ProductionRule(
@@ -810,20 +810,18 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
     ),
     ProductionRule(
         rule_id="R039",
-        name="Atypical chest discomfort in diabetic or elderly patient",
+        name="Chest pain presenting with high severity or in older adults with risk factors",
         cluster="chest_pain",
         conditions=RuleConditions(
             symptoms=frozenset({"chest_pain"}),
-            risk_factors=frozenset({"diabetes"}),
-            min_severity=4,
-            required_facts=frozenset({"symptom:chest_pain", "risk:diabetes"}),
+            required_facts=frozenset({"symptom:chest_pain", "fact:chest_pain_urgent_criteria"}),
         ),
         tier=TriageTier.URGENT_CARE_TODAY,
         certainty_factor=0.85,
         override=False,
         priority=75,
-        source="UNVERIFIED - needs team review (NICE CG95 notes atypical cardiac symptoms in diabetes, but rule formulation and severity cutoff >=4 is an app synthesis)",
-        explanation_template="Diabetic patients frequently experience atypical or blunted cardiac ischaemic symptoms and require urgent same-day evaluation.",
+        source="UNVERIFIED - needs team review (NICE CG95 and ESC guidelines advise urgent clinical assessment for chest pain with high severity >=7 or in patients aged >=50 with cardiovascular risk factors; composite threshold is an app synthesis without direct page verification in session)",
+        explanation_template="Chest pain presenting with high severity (>=7) or occurring in an older adult (age >=50) with clinical risk factors warrants urgent same-day medical assessment to rule out acute myocardial ischaemia.",
     ),
     ProductionRule(
         rule_id="R040",

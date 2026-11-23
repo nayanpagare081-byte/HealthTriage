@@ -98,13 +98,19 @@ class TriageService:
                 selected_tier, selected_cf = chosen
             else:
                 # If no tier passed the threshold, pick the highest urgency tier among fired rules
-                # (fail toward over-escalation)
+                # (fail toward over-escalation).
+                # CRITICAL SAFETY REQUIREMENT: Never return self_care when no tier passed
+                # the confidence threshold. If fallback picks self_care, escalate to see_doctor_routine.
                 highest_tier = max(
                     tier_groups.keys(),
                     key=lambda t: TIER_URGENCY_RANK.get(TriageTier(t), 0),
                 )
-                selected_tier = highest_tier
-                selected_cf = tier_cfs.get(highest_tier, 0.5)
+                if highest_tier == TriageTier.SELF_CARE.value:
+                    selected_tier = TriageTier.SEE_DOCTOR_ROUTINE.value
+                    selected_cf = tier_cfs.get(highest_tier, 0.5)
+                else:
+                    selected_tier = highest_tier
+                    selected_cf = tier_cfs.get(highest_tier, 0.5)
 
         # Backward compatible outcome string
         if selected_tier == TriageTier.EMERGENCY.value:

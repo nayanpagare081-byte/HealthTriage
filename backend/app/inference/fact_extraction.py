@@ -209,6 +209,20 @@ def extract_patient_facts(
             add_fact("warning_sign:severe_breathing_difficulty", 1.0)
             add_fact("severe_breathing_difficulty", 1.0)
 
+    # 8b. Chest-Pain Gap Evaluation
+    # If symptom:chest_pain is present without the chest_pain warning sign,
+    # and severity >= 7 OR (age >= 50 AND any risk factor),
+    # assert fact:chest_pain_urgent_criteria for urgent care triage.
+    if "symptom:chest_pain" in facts and "chest_pain" not in facts:
+        has_high_sev = severity is not None and int(severity) >= 7
+        has_age_and_risk = (
+            age is not None
+            and float(age) >= 50.0
+            and bool(risk_factors or history)
+        )
+        if has_high_sev or has_age_and_risk:
+            add_fact("fact:chest_pain_urgent_criteria", 1.0)
+
     # 9. Additional Interactive Answers
     if answered_facts:
         for f_key, val in answered_facts.items():
