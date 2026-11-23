@@ -14,15 +14,20 @@ import {
   Sparkles,
   Check,
   ShieldAlert,
-  Thermometer,
-  Gauge,
-  Wind,
   Plus,
   X,
-  Send,
   Loader2,
+  HelpCircle,
+  ArrowRight,
+  CheckCircle2,
 } from "lucide-react";
-import { WarningSignId, VitalSigns, PatientInputPayload, AssessmentResult } from "../types/triage";
+import {
+  WarningSignId,
+  VitalSigns,
+  PatientInputPayload,
+  AssessmentResult,
+  NextQuestionResponse,
+} from "../types/triage";
 import { KNOWLEDGE_BASE_RULES } from "../data/rulesData";
 import { DEMO_PRESETS } from "../data/demoPresets";
 
@@ -77,31 +82,42 @@ export default function AssessmentForm({
   error,
   setError,
 }: AssessmentFormProps) {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+
+  // Flow Mode: "standard" full form or "adaptive" question-by-question backward chaining
+  const [flowMode, setFlowMode] = useState<"standard" | "adaptive">("standard");
+
   // Form State
   const [age, setAge] = useState<string>("58");
-  const [symptomsInput, setSymptomsInput] = useState<string>("Substernal chest pressure, Shortness of breath, Diaphoresis");
+  const [symptomsInput, setSymptomsInput] = useState<string>(
+    "Substernal chest pressure, Shortness of breath, Diaphoresis"
+  );
   const [duration, setDuration] = useState<string>("1.5");
   const [severity, setSeverity] = useState<number>(8);
 
   const [medicalHistory, setMedicalHistory] = useState<string[]>(["Hypertension"]);
   const [riskFactors, setRiskFactors] = useState<string[]>(["Current Smoker"]);
 
-  const [vitalsExpanded, setVitalsExpanded] = useState<boolean>(true);
-  const [tempC, setTempC] = useState<string>("37.1");
-  const [heartRate, setHeartRate] = useState<string>("102");
-  const [respRate, setRespRate] = useState<string>("22");
-  const [systolicBP, setSystolicBP] = useState<string>("154");
-  const [diastolicBP, setDiastolicBP] = useState<string>("94");
-  const [o2Sat, setO2Sat] = useState<string>("94.0");
+  const [vitalsExpanded, setVitalsExpanded] = useState<boolean>(false);
+  const [tempC, setTempC] = useState<string>("");
+  const [heartRate, setHeartRate] = useState<string>("");
+  const [respRate, setRespRate] = useState<string>("");
+  const [systolicBP, setSystolicBP] = useState<string>("");
+  const [diastolicBP, setDiastolicBP] = useState<string>("");
+  const [o2Sat, setO2Sat] = useState<string>("");
 
-  const [additionalNotes, setAdditionalNotes] = useState<string>(
-    "Pain radiates toward left shoulder and jaw. Mild diaphoretic presentation."
-  );
-
+  const [additionalNotes, setAdditionalNotes] = useState<string>("");
   const [warningSigns, setWarningSigns] = useState<WarningSignId[]>([
     "chest_pain",
     "severe_breathing_difficulty",
   ]);
+
+  // Adaptive Flow State
+  const [adaptiveStep, setAdaptiveStep] = useState<"initial" | "asking" | "completed">("initial");
+  const [currentQuestion, setCurrentQuestion] = useState<NextQuestionResponse | null>(null);
+  const [answeredQuestions, setAnsweredQuestions] = useState<Record<string, boolean>>({});
+  const [answeredQuestionIds, setAnsweredQuestionIds] = useState<string[]>([]);
+  const [isAskingQuestion, setIsAskingQuestion] = useState<boolean>(false);
 
   // Helpers
   const toggleWarningSign = (signKey: WarningSignId) => {
@@ -187,10 +203,14 @@ export default function AssessmentForm({
     setO2Sat("");
     setAdditionalNotes("");
     setError("");
+    setAdaptiveStep("initial");
+    setCurrentQuestion(null);
+    setAnsweredQuestions({});
+    setAnsweredQuestionIds([]);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Submit assessment payload
+  const runAssessment = async (overridePayload?: Partial<PatientInputPayload>) => {
     setIsLoading(true);
     setError("");
 
@@ -205,14 +225,13 @@ export default function AssessmentForm({
       return;
     }
 
-    const ageNum = parseInt(age, 10);
+    const ageNum = parseFloat(age);
     if (isNaN(ageNum) || ageNum < 0 || ageNum > 120) {
       setError("Please enter a valid age between 0 and 120.");
       setIsLoading(false);
       return;
     }
 
-    // Prepare vital signs payload (only include valid numbers)
     const vitalSignsPayload: VitalSigns = {};
     if (tempC.trim()) vitalSignsPayload.temperature_c = parseFloat(tempC);
     if (heartRate.trim()) vitalSignsPayload.heart_rate_bpm = parseInt(heartRate, 10);
@@ -231,10 +250,11 @@ export default function AssessmentForm({
       risk_factors: riskFactors.filter((item) => item !== "None"),
       vital_signs: vitalSignsPayload,
       additional_information: additionalNotes.trim() ? additionalNotes.trim() : null,
+      ...overridePayload,
     };
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/triage", {
+      const response = await fetch(`${API_URL}/api/triage`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -249,7 +269,7 @@ export default function AssessmentForm({
         let msg = "Triage evaluation failed.";
         if (data && data.detail) {
           if (Array.isArray(data.detail)) {
-            msg = data.detail.map((d: { msg?: string; loc?: string[] }) => d.msg || JSON.stringify(d)).join("; ");
+            msg = data.detail.map((d: { msg?: string }) => d.msg || JSON.stringify(d)).join("; ");
           } else if (typeof data.detail === "string") {
             msg = data.detail;
           }
@@ -259,7 +279,6 @@ export default function AssessmentForm({
 
       onAssessmentCompleted(data);
 
-      // Smooth scroll to the result section
       setTimeout(() => {
         const resultElem = document.getElementById("reasoning-result");
         if (resultElem) {
@@ -270,14 +289,110 @@ export default function AssessmentForm({
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("Could not communicate with the backend API. Please ensure FastAPI is running on http://127.0.0.1:8000.");
+        setError(`Could not communicate with the backend API at ${API_URL}.`);
       }
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Severity color helper
+  const handleStandardSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await runAssessment();
+  };
+
+  // Adaptive Question Flow Handlers
+  const fetchNextAdaptiveQuestion = async (
+    updatedAnswers: Record<string, boolean>,
+    updatedIds: string[]
+  ) => {
+    setIsAskingQuestion(true);
+    setError("");
+
+    const parsedSymptoms = symptomsInput
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    const payload = {
+      age: parseFloat(age) || 30.0,
+      symptoms: parsedSymptoms.length > 0 ? parsedSymptoms : ["fever"],
+      warning_signs: warningSigns,
+      duration_hours: duration.trim() ? parseFloat(duration) : null,
+      severity: severity,
+      risk_factors: riskFactors.filter((item) => item !== "None"),
+      answered_questions: updatedAnswers,
+      answered_question_ids: updatedIds,
+    };
+
+    try {
+      const res = await fetch(`${API_URL}/api/triage/next-question`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error("Failed to retrieve next question from backward chaining.");
+      const qData: NextQuestionResponse = await res.json();
+
+      if (qData.has_next_question && qData.question_id) {
+        setCurrentQuestion(qData);
+        setAdaptiveStep("asking");
+      } else {
+        // Questions completed or goal determined! Run assessment directly.
+        setAdaptiveStep("completed");
+        await runAssessment();
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error) setError(err.message);
+      else setError("Failed to communicate with the next-question endpoint.");
+    } finally {
+      setIsAskingQuestion(false);
+    }
+  };
+
+  const startAdaptiveFlow = () => {
+    const parsedSymptoms = symptomsInput
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+    if (parsedSymptoms.length === 0) {
+      setError("Please enter at least one main symptom to begin adaptive questions.");
+      return;
+    }
+    fetchNextAdaptiveQuestion(answeredQuestions, answeredQuestionIds);
+  };
+
+  const answerAdaptiveQuestion = (answer: boolean) => {
+    if (!currentQuestion || !currentQuestion.target_fact) return;
+
+    const newAnswers = {
+      ...answeredQuestions,
+      [currentQuestion.target_fact]: answer,
+    };
+    const newIds = [...answeredQuestionIds, currentQuestion.question_id || ""];
+
+    // Also bridge answers into local state for visibility
+    if (answer) {
+      if (currentQuestion.target_fact === "risk:pregnancy") {
+        setRiskFactors((curr) => Array.from(new Set([...curr, "Pregnancy"])));
+      } else if (currentQuestion.target_fact === "risk:diabetes") {
+        setRiskFactors((curr) => Array.from(new Set([...curr, "Diabetes Type 2"])));
+      } else if (currentQuestion.target_fact === "risk:asthma_copd") {
+        setRiskFactors((curr) => Array.from(new Set([...curr, "Asthma / COPD"])));
+      } else if (currentQuestion.target_fact === "risk:immunocompromised") {
+        setRiskFactors((curr) => Array.from(new Set([...curr, "Immunocompromised"])));
+      } else if (currentQuestion.target_fact.startsWith("symptom:")) {
+        const sympToken = currentQuestion.target_fact.split(":")[1];
+        addSymptomChip(sympToken);
+      }
+    }
+
+    setAnsweredQuestions(newAnswers);
+    setAnsweredQuestionIds(newIds);
+    fetchNextAdaptiveQuestion(newAnswers, newIds);
+  };
+
   const getSeverityColor = (val: number) => {
     if (val <= 3) return "text-emerald-600 bg-emerald-50 border-emerald-200";
     if (val <= 6) return "text-[#247BA0] bg-[#EBF4F8] border-blue-200";
@@ -295,18 +410,64 @@ export default function AssessmentForm({
   return (
     <section id="assessment" className="py-8 scroll-mt-24">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="mb-8 text-center sm:text-left">
-          <div className="inline-flex items-center gap-2 rounded-md bg-[#EBF4F8] px-3 py-1 text-xs font-semibold text-[#1A5C78]">
-            <Stethoscope className="h-3.5 w-3.5 text-[#247BA0]" />
-            <span>TRIAGE ASSESSMENT</span>
+        {/* Pre-Form Clinical Safeguards & Disclaimer */}
+        <div className="mb-6 rounded-2xl border border-amber-300 bg-amber-50/90 p-5 text-amber-950 shadow-xs flex items-start gap-3.5">
+          <ShieldAlert className="h-5 w-5 text-amber-700 shrink-0 mt-0.5" />
+          <div className="text-xs space-y-1">
+            <p className="font-bold uppercase tracking-wider text-amber-900">
+              Important Clinical Safeguard & Academic Purpose
+            </p>
+            <p className="leading-relaxed text-amber-900/90">
+              This rule-based health triage expert system is developed as an academic artificial
+              intelligence coursework demonstration. It provides preliminary symptom reasoning
+              using IF-THEN clinical production rules. It is <strong>NOT</strong> a medical diagnostic
+              device or clinical clearance. Always seek the advice of a qualified doctor or emergency
+              services if you are unwell or concerned.
+            </p>
           </div>
-          <h2 className="mt-2 text-2xl font-bold tracking-tight text-[#10243A] sm:text-3xl">
-            Patient Assessment
-          </h2>
-          <p className="mt-1 text-sm text-[#718096] max-w-3xl">
-            Enter patient details, reported symptoms, and check any warning signs to evaluate emergency status.
-          </p>
+        </div>
+
+        {/* Section Header */}
+        <div className="mb-6 text-center sm:text-left flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-md bg-[#EBF4F8] px-3 py-1 text-xs font-semibold text-[#1A5C78]">
+              <Stethoscope className="h-3.5 w-3.5 text-[#247BA0]" />
+              <span>PRODUCTION-RULE EXPERT SYSTEM</span>
+            </div>
+            <h2 className="mt-2 text-2xl font-bold tracking-tight text-[#10243A] sm:text-3xl">
+              Patient Assessment
+            </h2>
+            <p className="mt-1 text-sm text-[#718096]">
+              Evaluate preliminary urgency using clinical guidelines with forward and backward chaining.
+            </p>
+          </div>
+
+          {/* Mode Toggle Bar */}
+          <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200 shrink-0 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setFlowMode("standard")}
+              className={`rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all ${
+                flowMode === "standard"
+                  ? "bg-white text-[#10243A] shadow-xs"
+                  : "text-slate-600 hover:text-[#10243A]"
+              }`}
+            >
+              Standard Full Form
+            </button>
+            <button
+              type="button"
+              onClick={() => setFlowMode("adaptive")}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all ${
+                flowMode === "adaptive"
+                  ? "bg-[#10243A] text-white shadow-xs"
+                  : "text-slate-600 hover:text-[#10243A]"
+              }`}
+            >
+              <HelpCircle className="h-3.5 w-3.5 text-[#24B8A6]" />
+              <span>Adaptive Guided Flow</span>
+            </button>
+          </div>
         </div>
 
         {/* Demo Preset Bar */}
@@ -352,8 +513,134 @@ export default function AssessmentForm({
           </div>
         </div>
 
-        {/* Assessment Form */}
-        <form onSubmit={handleSubmit} className="space-y-8">
+        {/* ADAPTIVE QUESTIONING FLOW (Backward Chaining) */}
+        {flowMode === "adaptive" && (
+          <div className="mb-8 rounded-2xl border-2 border-[#247BA0] bg-white p-6 sm:p-8 shadow-sm space-y-6">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#247BA0] text-white">
+                  <HelpCircle className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-[#10243A]">
+                    Adaptive Guided Questionnaire
+                  </h3>
+                  <p className="text-xs text-[#718096]">
+                    Powered by backward-chaining goal derivation to identify missing clinical premises.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFlowMode("standard")}
+                className="text-xs font-semibold text-[#247BA0] hover:underline"
+              >
+                Switch to Full Form →
+              </button>
+            </div>
+
+            {adaptiveStep === "initial" && (
+              <div className="space-y-5">
+                <p className="text-xs text-[#243447] leading-relaxed">
+                  Start by providing your age and initial symptom. The system will then ask focused
+                  follow-up questions guided by clinical triage goals:
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-[#10243A]">
+                      Patient Age (Years)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="120"
+                      value={age}
+                      onChange={(e) => setAge(e.target.value)}
+                      className="mt-1.5 w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-[#10243A]">
+                      Primary Symptom
+                    </label>
+                    <input
+                      type="text"
+                      value={symptomsInput}
+                      onChange={(e) => setSymptomsInput(e.target.value)}
+                      placeholder="e.g. Fever, Cough, Headache, Abdominal pain"
+                      className="mt-1.5 w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={startAdaptiveFlow}
+                  disabled={isAskingQuestion}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#10243A] px-6 py-3 text-xs font-bold text-white shadow-xs hover:bg-[#18375A] transition-all"
+                >
+                  {isAskingQuestion ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-[#24B8A6]" />
+                  ) : (
+                    <ArrowRight className="h-4 w-4 text-[#24B8A6]" />
+                  )}
+                  <span>Begin Guided Adaptive Questions</span>
+                </button>
+              </div>
+            )}
+
+            {adaptiveStep === "asking" && currentQuestion && (
+              <div className="rounded-xl border border-blue-200 bg-[#EBF4F8]/60 p-6 space-y-4">
+                <div className="flex items-center justify-between text-xs font-bold text-[#1A5C78]">
+                  <span>Active Goal Hypothesis: {currentQuestion.current_tier_goal?.toUpperCase() || "EVALUATION"}</span>
+                  <span className="font-mono text-slate-500">Question ID: {currentQuestion.question_id}</span>
+                </div>
+
+                <h4 className="text-base font-bold text-[#10243A] leading-snug">
+                  {currentQuestion.prompt}
+                </h4>
+
+                {currentQuestion.relevance && (
+                  <p className="text-xs text-[#718096] bg-white p-3 rounded-lg border border-slate-200/80">
+                    <strong>Clinical Relevance:</strong> {currentQuestion.relevance}
+                  </p>
+                )}
+
+                <div className="flex flex-wrap gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => answerAdaptiveQuestion(true)}
+                    disabled={isAskingQuestion}
+                    className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-6 py-2.5 text-xs font-bold text-white hover:bg-red-700 transition-colors shadow-xs"
+                  >
+                    <Check className="h-4 w-4" />
+                    <span>Yes / Present</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => answerAdaptiveQuestion(false)}
+                    disabled={isAskingQuestion}
+                    className="inline-flex items-center gap-2 rounded-xl bg-slate-200 px-6 py-2.5 text-xs font-bold text-slate-800 hover:bg-slate-300 transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                    <span>No / Absent</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFlowMode("standard")}
+                    className="ml-auto text-xs text-slate-500 hover:text-slate-800 self-center"
+                  >
+                    Skip directly to full form
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* STANDARD COMPREHENSIVE FORM */}
+        <form onSubmit={handleStandardSubmit} className="space-y-8">
           {/* Section 1: Basic Information */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-xs">
             <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
@@ -381,15 +668,16 @@ export default function AssessmentForm({
                     type="number"
                     min="0"
                     max="120"
+                    step="0.1"
                     required
                     value={age}
                     onChange={(e) => setAge(e.target.value)}
-                    placeholder="e.g. 45"
+                    placeholder="e.g. 45 (or 0.2 for 2-month infant)"
                     className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-[#243447] placeholder-slate-400 focus:border-[#247BA0] focus:ring-2 focus:ring-[#247BA0]/20 focus:outline-none"
                   />
                 </div>
                 <p className="mt-1.5 text-[11px] text-[#718096]">
-                  Enter patient's age in years
+                  Enter age in years (infants under 3 months can be entered as e.g. 0.2)
                 </p>
               </div>
 
@@ -406,12 +694,12 @@ export default function AssessmentForm({
                     step="0.5"
                     value={duration}
                     onChange={(e) => setDuration(e.target.value)}
-                    placeholder="e.g. 2.5"
+                    placeholder="e.g. 24 (or 120 for 5 days, 504 for 3 weeks)"
                     className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-[#243447] placeholder-slate-400 focus:border-[#247BA0] focus:ring-2 focus:ring-[#247BA0]/20 focus:outline-none"
                   />
                 </div>
                 <p className="mt-1.5 text-[11px] text-[#718096]">
-                  Optional — hours elapsed since symptoms began
+                  Duration hours: 120h = 5 days; 168h = 7 days; 504h = 3 weeks
                 </p>
               </div>
 
@@ -430,7 +718,7 @@ export default function AssessmentForm({
                   rows={2}
                   value={symptomsInput}
                   onChange={(e) => setSymptomsInput(e.target.value)}
-                  placeholder="e.g. Substernal chest pressure, shortness of breath, dizziness"
+                  placeholder="e.g. Fever, cough, stiff neck, headache, diarrhoea, sore throat, chest pain"
                   className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-[#243447] placeholder-slate-400 focus:border-[#247BA0] focus:ring-2 focus:ring-[#247BA0]/20 focus:outline-none"
                 />
 
@@ -538,7 +826,7 @@ export default function AssessmentForm({
               {/* Clinical Risk Factors */}
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[#10243A]">
-                  Clinical Risk Factors
+                  Clinical Risk Factors (Escalates Urgency Tiers)
                 </label>
                 <div className="mt-2.5 flex flex-wrap gap-2">
                   {RISK_FACTOR_OPTIONS.map((item) => {
@@ -588,10 +876,9 @@ export default function AssessmentForm({
                 {vitalsExpanded && (
                   <div className="p-4 bg-white border-t border-slate-200 space-y-4">
                     <p className="text-xs text-[#718096]">
-                      Enter any available vital sign measurements. All fields are optional.
+                      Temperature &ge; 38°C automatically confirms fever facts. SpO2 &lt; 92% escalates respiratory status.
                     </p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                      {/* Temperature */}
                       <div>
                         <label className="block text-[11px] font-semibold text-slate-700">
                           Temperature (°C)
@@ -604,80 +891,10 @@ export default function AssessmentForm({
                           value={tempC}
                           onChange={(e) => setTempC(e.target.value)}
                           placeholder="37.0"
-                          className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-[#243447] focus:border-[#247BA0] focus:outline-none"
+                          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-xs"
                         />
                         <span className="text-[10px] text-slate-400">Normal: 36.5–37.5</span>
                       </div>
-
-                      {/* Heart Rate */}
-                      <div>
-                        <label className="block text-[11px] font-semibold text-slate-700">
-                          Heart Rate (BPM)
-                        </label>
-                        <input
-                          type="number"
-                          min="20"
-                          max="250"
-                          value={heartRate}
-                          onChange={(e) => setHeartRate(e.target.value)}
-                          placeholder="75"
-                          className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-[#243447] focus:border-[#247BA0] focus:outline-none"
-                        />
-                        <span className="text-[10px] text-slate-400">Normal: 60–100</span>
-                      </div>
-
-                      {/* Respiratory Rate */}
-                      <div>
-                        <label className="block text-[11px] font-semibold text-slate-700">
-                          Respiratory Rate (/min)
-                        </label>
-                        <input
-                          type="number"
-                          min="4"
-                          max="80"
-                          value={respRate}
-                          onChange={(e) => setRespRate(e.target.value)}
-                          placeholder="16"
-                          className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-[#243447] focus:border-[#247BA0] focus:outline-none"
-                        />
-                        <span className="text-[10px] text-slate-400">Normal: 12–20</span>
-                      </div>
-
-                      {/* Systolic BP */}
-                      <div>
-                        <label className="block text-[11px] font-semibold text-slate-700">
-                          Systolic BP (mmHg)
-                        </label>
-                        <input
-                          type="number"
-                          min="40"
-                          max="300"
-                          value={systolicBP}
-                          onChange={(e) => setSystolicBP(e.target.value)}
-                          placeholder="120"
-                          className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-[#243447] focus:border-[#247BA0] focus:outline-none"
-                        />
-                        <span className="text-[10px] text-slate-400">Normal: 90–120</span>
-                      </div>
-
-                      {/* Diastolic BP */}
-                      <div>
-                        <label className="block text-[11px] font-semibold text-slate-700">
-                          Diastolic BP (mmHg)
-                        </label>
-                        <input
-                          type="number"
-                          min="20"
-                          max="200"
-                          value={diastolicBP}
-                          onChange={(e) => setDiastolicBP(e.target.value)}
-                          placeholder="80"
-                          className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-[#243447] focus:border-[#247BA0] focus:outline-none"
-                        />
-                        <span className="text-[10px] text-slate-400">Normal: 60–80</span>
-                      </div>
-
-                      {/* SpO2 */}
                       <div>
                         <label className="block text-[11px] font-semibold text-slate-700">
                           Oxygen Saturation (SpO2 %)
@@ -690,41 +907,20 @@ export default function AssessmentForm({
                           value={o2Sat}
                           onChange={(e) => setO2Sat(e.target.value)}
                           placeholder="98.0"
-                          className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-[#243447] focus:border-[#247BA0] focus:outline-none"
+                          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-xs"
                         />
-                        <span className="text-[10px] text-slate-400">Normal: 95–100%</span>
+                        <span className="text-[10px] text-slate-400">&ge; 95% Normal</span>
                       </div>
                     </div>
                   </div>
                 )}
-              </div>
-
-              {/* Additional Notes */}
-              <div>
-                <div className="flex items-center justify-between">
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-[#10243A]">
-                    Additional Notes
-                  </label>
-                  <span className="text-[11px] text-slate-400 font-mono">
-                    {additionalNotes.length}/1000
-                  </span>
-                </div>
-                <textarea
-                  rows={2}
-                  maxLength={1000}
-                  value={additionalNotes}
-                  onChange={(e) => setAdditionalNotes(e.target.value)}
-                  placeholder="Optional: Observed physical signs, precipitating events, or additional nuances..."
-                  className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs text-[#243447] placeholder-slate-400 focus:border-[#247BA0] focus:outline-none"
-                />
               </div>
             </div>
           </div>
 
           {/* Section 3: High-Priority Emergency Warning Signs */}
           <div className="rounded-2xl border-2 border-red-200 bg-white p-6 sm:p-8 shadow-sm relative overflow-hidden">
-            {/* Subtle top indicator bar */}
-            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-red-500 via-amber-500 to-red-500" />
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-red-500 via-rose-500 to-red-500" />
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
               <div className="flex items-center gap-3">
@@ -733,10 +929,10 @@ export default function AssessmentForm({
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-[#10243A]">
-                    Emergency Warning Signs
+                    Emergency Red Flags (Bypasses Certainty Math)
                   </h3>
                   <p className="text-xs text-[#718096]">
-                    Select any warning signs that apply to the patient.
+                    Select any warning signs that apply. These trigger immediate emergency escalation.
                   </p>
                 </div>
               </div>
@@ -748,7 +944,7 @@ export default function AssessmentForm({
                   className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-red-600 transition-colors self-start sm:self-auto"
                 >
                   <X className="h-3.5 w-3.5" />
-                  <span>Clear All Warning Signs</span>
+                  <span>Clear All Red Flags</span>
                 </button>
               )}
             </div>
@@ -756,7 +952,7 @@ export default function AssessmentForm({
             {/* Warning Sign Cards */}
             <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               {KNOWLEDGE_BASE_RULES.map((rule) => {
-                const isChecked = warningSigns.includes(rule.sign_key);
+                const isChecked = rule.sign_key ? warningSigns.includes(rule.sign_key) : false;
                 return (
                   <label
                     key={rule.rule_id}
@@ -769,7 +965,7 @@ export default function AssessmentForm({
                     <input
                       type="checkbox"
                       checked={isChecked}
-                      onChange={() => toggleWarningSign(rule.sign_key)}
+                      onChange={() => rule.sign_key && toggleWarningSign(rule.sign_key)}
                       className="mt-0.5 h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500 accent-red-600 shrink-0"
                     />
                     <div className="space-y-1 w-full">
@@ -795,38 +991,16 @@ export default function AssessmentForm({
                 );
               })}
             </div>
-
-            {/* Status summary of selected warning signs */}
-            <div className="mt-5 rounded-xl bg-slate-50 border border-slate-200/80 p-3.5 flex items-center gap-2 text-xs">
-              <AlertTriangle
-                className={`h-4 w-4 shrink-0 ${
-                  warningSigns.length > 0 ? "text-red-500" : "text-slate-400"
-                }`}
-              />
-              <span className="text-slate-700">
-                {warningSigns.length > 0 ? (
-                  <>
-                    <strong className="text-red-700">{warningSigns.length}</strong> warning{" "}
-                    {warningSigns.length === 1 ? "sign" : "signs"} selected — triggers emergency escalation.
-                  </>
-                ) : (
-                  "No emergency warning signs selected."
-                )}
-              </span>
-            </div>
           </div>
 
-          {/* Form Submission Actions & Error State */}
+          {/* Form Actions & Error */}
           <div className="space-y-4">
             {error && (
               <div className="flex items-start gap-3 rounded-xl border border-red-300 bg-red-50 p-4 text-xs text-red-800">
                 <AlertTriangle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-bold">Assessment Request Failed</p>
+                  <p className="font-bold">Assessment Failed</p>
                   <p className="mt-1">{error}</p>
-                  <p className="mt-2 text-[11px] text-red-600">
-                    Please ensure the backend server is running and try again.
-                  </p>
                 </div>
               </div>
             )}
@@ -836,7 +1010,7 @@ export default function AssessmentForm({
                 type="button"
                 onClick={resetForm}
                 disabled={isLoading}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3.5 text-sm font-semibold text-[#243447] hover:bg-slate-50 active:scale-[0.98] transition-all disabled:opacity-50"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3.5 text-sm font-semibold text-[#243447] hover:bg-slate-50 transition-all disabled:opacity-50"
               >
                 <RotateCcw className="h-4 w-4 text-slate-500" />
                 <span>Reset Form</span>
@@ -850,12 +1024,12 @@ export default function AssessmentForm({
                 {isLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin text-[#24B8A6]" />
-                    <span>Processing Assessment...</span>
+                    <span>Executing Reasoning Pipeline...</span>
                   </>
                 ) : (
                   <>
                     <Activity className="h-4 w-4 text-[#24B8A6]" />
-                    <span>Run Assessment →</span>
+                    <span>Run Clinical Triage Reasoning →</span>
                   </>
                 )}
               </button>
@@ -866,4 +1040,3 @@ export default function AssessmentForm({
     </section>
   );
 }
-

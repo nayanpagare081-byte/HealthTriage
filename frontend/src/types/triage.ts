@@ -8,6 +8,14 @@ export type WarningSignId =
   | "severe_allergic_reaction"
   | "coughing_blood";
 
+export type TriageTierId =
+  | "emergency"
+  | "urgent_care_today"
+  | "see_doctor_soon"
+  | "see_doctor_routine"
+  | "self_care"
+  | "no_rule_matched";
+
 export interface VitalSigns {
   temperature_c?: number | null;
   heart_rate_bpm?: number | null;
@@ -29,34 +37,57 @@ export interface PatientInputPayload {
   additional_information?: string | null;
 }
 
+export interface FiredRuleInfo {
+  rule_id: string;
+  name: string;
+  tier: string;
+  certainty_factor: number;
+  source: string;
+  matched_conditions: string[];
+  explanation: string;
+  override?: boolean;
+}
+
 export interface AssessmentResult {
+  tier: string;
   outcome: "emergency_escalation" | "insufficient_information" | string;
   certainty_score: number;
+  fired_rules?: FiredRuleInfo[];
   activated_rules: string[];
   forward_chaining: {
     conclusions: string[];
     reasoning_trace: string[];
   };
+  forward_chaining_trace?: string[];
   backward_chaining: {
     goal: string;
     established: boolean;
     activated_rules: string[];
     reasoning_trace: string[];
   };
+  backward_chaining_result?: {
+    goal: string;
+    established: boolean;
+    activated_rules: string[];
+    reasoning_trace: string[];
+  };
   explanation: string;
+  rule_by_rule_explanation?: string[];
   disclaimer: string;
 }
 
 export interface RuleDefinition {
   rule_id: string;
-  sign_key: WarningSignId;
+  sign_key?: WarningSignId;
   name: string;
   description: string;
-  clinical_rationale: string;
+  clinical_rationale?: string;
   certainty_factor: number;
   priority: number;
   source: string;
-  urgency_level: "Critical" | "High";
+  tier?: string;
+  override?: boolean;
+  urgency_level?: "Critical" | "High" | string;
 }
 
 export interface DemoPreset {
@@ -64,7 +95,7 @@ export interface DemoPreset {
   title: string;
   subtitle: string;
   badge: string;
-  expectedOutcome: "emergency" | "insufficient";
+  expectedOutcome: "emergency" | "insufficient" | string;
   data: {
     age: number;
     symptoms: string[];
@@ -78,3 +109,13 @@ export interface DemoPreset {
   };
 }
 
+export interface NextQuestionResponse {
+  has_next_question: boolean;
+  question_id?: string | null;
+  prompt?: string | null;
+  target_fact?: string | null;
+  input_type?: string | null;
+  options?: string[];
+  relevance?: string | null;
+  current_tier_goal?: string | null;
+}

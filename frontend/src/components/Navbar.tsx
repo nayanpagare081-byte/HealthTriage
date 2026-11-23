@@ -25,8 +25,9 @@ export default function Navbar({ onNewAssessment }: NavbarProps) {
 
   const checkBackendHealth = async () => {
     setIsChecking(true);
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
     try {
-      const res = await fetch("http://127.0.0.1:8000/health", {
+      const res = await fetch(`${apiUrl}/health`, {
         method: "GET",
         headers: { Accept: "application/json" },
         cache: "no-store",
