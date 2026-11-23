@@ -1,0 +1,62 @@
+# Clinical Triage Test Report & Benchmark Results
+
+This report documents the verification and test execution of the **Health Triage Expert System** against the 20 course-specified end-to-end clinical benchmark scenarios and underlying inference unit suites.
+
+---
+
+## Executive Summary
+
+- **Total Test Cases Executed**: 53
+- **Passed**: 53 (100%)
+- **Failed**: 0 (0%)
+- **Execution Date**: 2026-11-23
+- **Test Runner**: Pytest 9.2.0 on Python 3.14.8 (Windows)
+
+---
+
+## 20 End-to-End Clinical Benchmark Cases
+
+| Case ID | Scenario / Patient Profile | Symptoms & Signs | Risk Factors | Expected Tier | Resulting Tier | Rule Fired | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **CASE_01** | Acute severe dyspnoea (Age 50) | Severe breathing difficulty | None | `emergency` | `emergency` | `R001` | **PASS** |
+| **CASE_02** | Crushing central chest pain (Age 58) | Central chest pain, diaphoresis | Smoker | `emergency` | `emergency` | `R002` | **PASS** |
+| **CASE_03** | Syncope / sudden collapse (Age 32) | Unconsciousness, collapse | None | `emergency` | `emergency` | `R003` | **PASS** |
+| **CASE_04** | Acute delirium in older adult (Age 74) | Sudden confusion, disorientation | None | `emergency` | `emergency` | `R004` | **PASS** |
+| **CASE_05** | Uncontrolled severe haemorrhage (Age 29) | Severe uncontrolled bleeding | None | `emergency` | `emergency` | `R005` | **PASS** |
+| **CASE_06** | Acute FAST stroke signs (Age 67) | Facial droop, arm weakness | None | `emergency` | `emergency` | `R006` | **PASS** |
+| **CASE_07** | Anaphylaxis with airway threat (Age 22) | Severe allergic reaction, lip swelling | None | `emergency` | `emergency` | `R007` | **PASS** |
+| **CASE_08** | Frank haemoptysis (Age 61) | Coughing up blood | None | `emergency` | `emergency` | `R008` | **PASS** |
+| **CASE_09** | Febrile infant <3 months (Age 0.15y / 8w) | Fever (duration 12h) | Infant <3m | `emergency` | `emergency` | `R009` | **PASS** |
+| **CASE_10** | High fever in infant 3–6m (Age 0.35y / 4m) | Fever (severity 7) | Infant 3-6m | `urgent_care_today` | `urgent_care_today` | `R010` | **PASS** |
+| **CASE_11** | Abdominal pain in pregnancy (Age 28) | Acute abdominal pain | Pregnancy | `urgent_care_today` | `urgent_care_today` | `R025` | **PASS** |
+| **CASE_12** | Atypical chest discomfort in diabetic (Age 70) | Chest discomfort (severity 5) | Diabetes, Age 70 | `urgent_care_today` | `urgent_care_today` | `R039` | **PASS** |
+| **CASE_13** | Acute respiratory exacerbation in COPD (Age 42) | Cough (severity 7) | Asthma/COPD | `urgent_care_today` | `urgent_care_today` | `R015` | **PASS** |
+| **CASE_14** | Exact 5-day fever threshold boundary (Age 35) | Fever (duration 120.0h) | None | `see_doctor_soon` | `see_doctor_soon` | `R011` | **PASS** |
+| **CASE_15** | Exact 3-week cough threshold boundary (Age 52) | Cough (duration 504.0h) | None | `see_doctor_routine` | `see_doctor_routine` | `R016` | **PASS** |
+| **CASE_16** | Severe dehydration with anuria (Age 40) | Diarrhoea, severe dehydration | None | `urgent_care_today` | `urgent_care_today` | `R029` | **PASS** |
+| **CASE_17** | Sore throat with airway stridor (Age 34) | Sore throat, cannot swallow | None | `emergency` | `emergency` | `R033` | **PASS** |
+| **CASE_18** | Healthy adult mild tension headache (Age 26) | Headache (severity 3, dur 12h) | None | `self_care` | `self_care` | `R023` | **PASS** |
+| **CASE_19** | Conflict: Mild viral cough + Red-flag bleeding | Cough + severe bleeding | None | `emergency` | `emergency` | `R005` | **PASS** |
+| **CASE_20** | Non-specific mild fatigue / dry skin (Age 24) | Mild fatigue, dry skin | None | `no_rule_matched` | `no_rule_matched` | None | **PASS** |
+
+---
+
+## Unit Testing Component Breakdown
+
+| Test File | Target Module | Scope | Tests Run | Pass / Fail |
+| :--- | :--- | :--- | :--- | :--- |
+| `tests/test_rules.py` | `knowledge_base/rules.py` | Rule count, ID indexing, override flags, self-care guards | 9 | 9 / 0 |
+| `tests/test_certainty_factor.py` | `inference/certainty_factor.py` | MYCIN formula, range checks, score combination | 6 | 6 / 0 |
+| `tests/test_forward_chaining.py` | `inference/forward_chaining.py` | Fixed-point loop, fact derivation, self-care blocking | 6 | 6 / 0 |
+| `tests/test_backward_chaining.py` | `inference/backward_chaining.py` | Goal verification, adaptive question selection | 4 | 4 / 0 |
+| `tests/test_api.py` | `app/main.py` | Endpoints (`/health`, `/api/rules`, `/api/triage`, `/api/triage/next-question`), Pydantic validation | 8 | 8 / 0 |
+| `tests/test_clinical_cases.py` | `services/triage_service.py` | 20 clinical benchmark scenarios & edge cases | 20 | 20 / 0 |
+
+---
+
+## Clinical Safety Guard Verification
+
+Specialised safety verification tests confirmed:
+1. **Red-flag Override Immunity**: Rules `R001`–`R008` bypass certainty factor calculations and return `emergency` with CF 1.0.
+2. **Self-Care Guard Enforcement**: Rules `R014`, `R018`, `R023`, `R028`, `R032`, `R036`, and `R040` are strictly blocked from firing whenever any warning sign, high-risk age group (<5 years or ≥65 years), or chronic risk factor is present.
+3. **Over-Escalation Bias**: When candidate rules conflict across multiple tiers, the inference engine chooses the more urgent clinical tier.

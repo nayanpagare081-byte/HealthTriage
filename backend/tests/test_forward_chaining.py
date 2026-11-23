@@ -1,3 +1,5 @@
+"""Unit tests for Forward Chaining Engine."""
+
 from app.inference.forward_chaining import ForwardChainingEngine
 
 
@@ -29,3 +31,24 @@ def test_forward_chaining_irrelevant_facts():
     result = engine.run({"mild_sneezing", "minor_scratch"})
     assert len(result.activated_rules) == 0
     assert len(result.conclusions) == 0
+
+
+def test_forward_chaining_graded_rule_fever_5_days():
+    engine = ForwardChainingEngine()
+    result = engine.run({"symptom:fever", "duration:over_5_days"})
+    assert "R011" in result.activated_rules
+    assert "see_doctor_soon" in result.conclusions
+
+
+def test_forward_chaining_self_care_blocked_by_guard():
+    """Verify that a self-care rule (R023 tension headache) does not fire if high-risk age fact is present."""
+    engine = ForwardChainingEngine()
+    # R023 requires symptom:headache and severity:mild_le_4
+    # But with age:elderly_65_plus present, the self-care guard blocks it!
+    result = engine.run({
+        "symptom:headache",
+        "severity:mild_le_4",
+        "age:elderly_65_plus",
+    })
+    assert "R023" not in result.activated_rules
+    assert "self_care" not in result.conclusions

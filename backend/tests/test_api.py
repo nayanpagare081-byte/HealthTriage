@@ -1,3 +1,5 @@
+"""Integration tests for FastAPI triage endpoints."""
+
 from fastapi.testclient import TestClient
 from app.main import app
 
@@ -9,6 +11,7 @@ def test_root_endpoint():
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "operational"
+    assert data["version"] == "2.0.0"
 
 
 def test_health_endpoint():
@@ -22,10 +25,11 @@ def test_list_rules_endpoint():
     assert response.status_code == 200
     rules = response.json()
     assert isinstance(rules, list)
-    assert len(rules) == 8
+    assert len(rules) == 40
     rule_ids = [r["rule_id"] for r in rules]
     assert "R001" in rule_ids
     assert "R008" in rule_ids
+    assert "R040" in rule_ids
 
 
 def test_triage_emergency_escalation():
@@ -49,6 +53,7 @@ def test_triage_emergency_escalation():
     assert response.status_code == 200
     data = response.json()
     assert data["outcome"] == "emergency_escalation"
+    assert data["tier"] == "emergency"
     assert data["certainty_score"] == 1.0
     assert "R002" in data["activated_rules"]
     assert data["backward_chaining"]["established"] is True
@@ -70,6 +75,7 @@ def test_triage_insufficient_information():
     assert response.status_code == 200
     data = response.json()
     assert data["outcome"] == "insufficient_information"
+    assert data["tier"] == "no_rule_matched"
     assert data["certainty_score"] == 0.0
     assert len(data["activated_rules"]) == 0
     assert data["backward_chaining"]["established"] is False
@@ -95,3 +101,21 @@ def test_triage_validation_error_empty_symptoms():
     }
     response = client.post("/api/triage", json=payload)
     assert response.status_code == 422
+
+
+def test_next_question_endpoint():
+    """Verify POST /api/triage/next-question returns adaptive questions."""
+    payload = {
+        "age": 28,
+        "symptoms": ["fever"],
+        "warning_signs": [],
+        "severity": 6,
+        "answered_questions": {},
+    }
+    response = client.post("/api/triage/next-question", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert "has_next_question" in data
+    if data["has_next_question"]:
+        assert data["question_id"] is not None
+        assert data["prompt"] is not None
