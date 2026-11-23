@@ -184,11 +184,11 @@ export default function KnowledgeBaseTable() {
                         <td className="px-5 py-4 text-[#718096] max-w-md leading-relaxed text-[11px]">
                           <div className="flex items-start gap-1.5">
                             {isUnverified ? (
-                              <span className="shrink-0 rounded bg-amber-100 border border-amber-200 px-1.5 py-0.2 text-[9px] font-bold text-amber-800">
-                                UNVERIFIED
+                              <span className="shrink-0 rounded bg-amber-100 border border-amber-200 px-1.5 py-0.5 text-[9px] font-bold text-amber-800">
+                                UNVERIFIED - needs team review
                               </span>
                             ) : (
-                              <span className="shrink-0 rounded bg-emerald-100 border border-emerald-200 px-1.5 py-0.2 text-[9px] font-bold text-emerald-800">
+                              <span className="shrink-0 rounded bg-emerald-100 border border-emerald-200 px-1.5 py-0.5 text-[9px] font-bold text-emerald-800">
                                 VERIFIED
                               </span>
                             )}

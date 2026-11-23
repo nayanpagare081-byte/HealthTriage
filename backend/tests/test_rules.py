@@ -57,7 +57,7 @@ def test_self_care_rules_cannot_fire_with_red_flag_warning_signs():
     """
     rules = get_all_rules()
     self_care_rules = [r for r in rules if r.tier == TriageTier.SELF_CARE]
-    assert len(self_care_rules) == 7  # R014, R018, R023, R028, R032, R036, R040
+    assert len(self_care_rules) == 6  # R014, R018, R023, R028, R032, R036 (R040 removed per chest safety)
 
     for rule in self_care_rules:
         # With warning sign passed as warning_signs list
@@ -145,3 +145,28 @@ def test_self_care_rules_eligible_for_standard_healthy_adult():
             risk_factors=[],
             known_facts=set(),
         ), f"Rule {rule.rule_id} unexpectedly blocked for healthy standard adult"
+
+
+def test_r040_chest_wall_tenderness_cannot_return_self_care():
+    """
+    SAFETY REQUIREMENT:
+    R040: remove self_care tier. Any chest-related symptom must have a minimum tier of see_doctor_soon.
+    A 50-year-old with chest-wall tenderness and no risk factors must NOT return self_care.
+    """
+    from app.models.patient import PatientInput
+    from app.services.triage_service import TriageService
+
+    service = TriageService()
+    patient = PatientInput(
+        age=50,
+        symptoms=["chest pain", "chest_wall_tenderness"],
+        severity=3,
+        duration_hours=24.0,
+        risk_factors=[],
+        warning_signs=[],
+    )
+    result = service.assess(patient)
+    assert result["tier"] != "self_care", f"Expected not to return self_care, got '{result['tier']}'"
+    assert result["tier"] == "see_doctor_soon", f"Expected 'see_doctor_soon', got '{result['tier']}'"
+    assert "R040" in result["activated_rules"], f"Expected R040 to fire, but got {result['activated_rules']}"
+

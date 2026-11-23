@@ -469,23 +469,25 @@ export default function AssessmentResultView({
                             <div className="shrink-0 flex items-center gap-2">
                               {src.isUnverified ? (
                                 <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800 border border-amber-200">
-                                  UNVERIFIED - Needs Team Review
+                                  UNVERIFIED - needs team review
                                 </span>
                               ) : (
-                                <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 border border-emerald-200">
-                                  Verified Clinical Source
-                                </span>
-                              )}
-                              {src.url && (
-                                <a
-                                  href={src.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#247BA0] hover:underline"
-                                >
-                                  <span>View Guideline</span>
-                                  <ExternalLink className="h-3 w-3" />
-                                </a>
+                                <>
+                                  <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 border border-emerald-200">
+                                    Verified Clinical Source
+                                  </span>
+                                  {src.url && (
+                                    <a
+                                      href={src.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#247BA0] hover:underline"
+                                    >
+                                      <span>View Guideline</span>
+                                      <ExternalLink className="h-3 w-3" />
+                                    </a>
+                                  )}
+                                </>
                               )}
                             </div>
                           </div>

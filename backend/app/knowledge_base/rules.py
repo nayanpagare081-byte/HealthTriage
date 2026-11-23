@@ -338,7 +338,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=0.80,
         override=False,
         priority=60,
-        source="NICE Guideline NG143 | URL: https://www.nice.org.uk/guidance/ng143/chapter/Recommendations | Section: 1.2 Table 1 (Amber category) | Date accessed: 2026-11-23 | Threshold: Fever for >=5 days (120+ hours) is Amber flag requiring face-to-face clinical review",
+        source="UNVERIFIED - needs team review (NICE Guideline NG143 Section 1.2 Table 1 Amber category specifies fever for >=5 days strictly within pediatric scope under 5 years; generalizing this threshold to older children and adults is an unverified clinical extrapolation)",
         explanation_template="Fever persisting for 5 or more days (120+ hours) requires medical assessment to exclude atypical or systemic infections.",
     ),
     ProductionRule(
@@ -423,7 +423,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=0.80,
         override=False,
         priority=50,
-        source="NICE Guideline NG12 & NHS Cough Guidance | URL: https://www.nice.org.uk/guidance/ng12/chapter/Recommendations-organised-by-site-of-cancer | Section: 1.2.1 | Date accessed: 2026-11-23 | Threshold: Unexplained persistent cough for >3 weeks (>504 hours) warrants primary care referral and chest radiography",
+        source="NICE Guideline NG12 & NHS Cough Guidance | URL: https://www.nice.org.uk/guidance/ng12/chapter/Recommendations-organised-by-site-of-cancer | Section: 1.2 Lung and pleural cancers, Recommendation 1.2.1 | Date accessed: 2026-11-23 | Threshold: Unexplained persistent cough for >3 weeks (>504 hours) warrants primary care referral and chest radiography",
         explanation_template="Unexplained cough lasting longer than 3 weeks warrants routine primary care review and chest radiography.",
     ),
     ProductionRule(
@@ -669,7 +669,7 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
         certainty_factor=0.85,
         override=False,
         priority=60,
-        source="NHS Health A to Z: Diarrhoea and vomiting | URL: https://www.nhs.uk/conditions/diarrhoea-and-vomiting/ | Section: When to get medical advice | Date accessed: 2026-11-23 | Threshold: Diarrhoea lasting >7 days (>168 hours) or presence of visible blood in stool requires prompt doctor evaluation",
+        source="UNVERIFIED - needs team review (NHS Diarrhoea guidelines provide distinct threshold branches by age [e.g. >24h for infants under 1 vs >7 days for older children/adults] and separate criteria for bloody stool; applying a single flat 7-day rule without age differentiation needs clinical team review)",
         explanation_template="Diarrhoea persisting longer than 7 days requires stool microbiological examination and clinical review.",
     ),
     ProductionRule(
@@ -743,19 +743,19 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
     ),
     ProductionRule(
         rule_id="R035",
-        name="Persistent sore throat exceeding 10 days",
+        name="Persistent sore throat lasting more than 7 days (1 week)",
         cluster="sore_throat",
         conditions=RuleConditions(
             symptoms=frozenset({"sore_throat"}),
-            min_duration_hours=240.0,  # 10 days
-            required_facts=frozenset({"symptom:sore_throat", "duration:over_10_days"}),
+            min_duration_hours=168.0,  # 7 days
+            required_facts=frozenset({"symptom:sore_throat", "duration:over_7_days"}),
         ),
         tier=TriageTier.SEE_DOCTOR_ROUTINE,
-        certainty_factor=0.75,
+        certainty_factor=0.80,
         override=False,
         priority=40,
-        source="UNVERIFIED - needs team review (NHS recommends GP review if sore throat lasts >7 days; 10-day cutoff is an app heuristic)",
-        explanation_template="A sore throat that does not improve after 10 days warrants a routine doctor appointment to rule out persistent infection.",
+        source="NHS Health A to Z: Sore throat | URL: https://www.nhs.uk/conditions/sore-throat/ | Section: When to see a GP | Date accessed: 2026-11-23 | Threshold: Sore throat that does not improve after a week (7 days / >168 hours) -> See a GP",
+        explanation_template="A sore throat that does not improve after a week (7 days) warrants a routine doctor appointment to investigate persistent infection.",
     ),
     ProductionRule(
         rule_id="R036",
@@ -834,12 +834,12 @@ KNOWLEDGE_BASE: List[ProductionRule] = [
             max_severity=4,
             required_facts=frozenset({"symptom:chest_pain", "symptom:chest_wall_tenderness"}),
         ),
-        tier=TriageTier.SELF_CARE,
+        tier=TriageTier.SEE_DOCTOR_SOON,
         certainty_factor=0.75,
         override=False,
-        priority=30,
-        source="UNVERIFIED - needs team review (Self-care classification for chest pain without ECG/examination carries cardiac hazard; cutoff <=4 is an engineering heuristic)",
-        explanation_template="Chest pain reproduced on localized palpation of the chest wall is characteristic of costochondritis or muscular strain.",
+        priority=60,
+        source="UNVERIFIED - needs team review (Minimum see_doctor_soon tier applied to all chest pain variants per safety protocol; costochondritis requires clinical palpation and ECG exclusion of ACS)",
+        explanation_template="Chest pain reproduced on localized chest wall tenderness suggests musculoskeletal strain (e.g., costochondritis), but medical evaluation is advised to safely exclude cardiac etiologies.",
     ),
 ]
 
