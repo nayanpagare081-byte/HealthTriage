@@ -1,7 +1,7 @@
+"""Data models for patient input, adaptive questioning, and triage responses."""
 
 from enum import Enum
-from typing import Optional
-
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field, ConfigDict
 
 
@@ -30,7 +30,7 @@ class VitalSigns(BaseModel):
 class PatientInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    age: int = Field(ge=0, le=120)
+    age: float = Field(ge=0, le=120)
     symptoms: list[str] = Field(min_length=1, max_length=30)
     warning_signs: list[WarningSign] = Field(default_factory=list)
 
@@ -45,3 +45,52 @@ class PatientInput(BaseModel):
     additional_information: Optional[str] = Field(
         default=None, max_length=1000
     )
+
+
+class NextQuestionRequest(BaseModel):
+    """Payload for requesting the next adaptive triage question."""
+    age: Optional[float] = Field(default=None, ge=0, le=120)
+    symptoms: list[str] = Field(default_factory=list)
+    warning_signs: list[str] = Field(default_factory=list)
+    duration_hours: Optional[float] = Field(default=None, ge=0, le=8760)
+    severity: Optional[int] = Field(default=5, ge=1, le=10)
+    risk_factors: list[str] = Field(default_factory=list)
+    answered_questions: Dict[str, Any] = Field(default_factory=dict)
+    answered_question_ids: list[str] = Field(default_factory=list)
+
+
+class NextQuestionResponse(BaseModel):
+    """Adaptive question response generated via backward chaining."""
+    has_next_question: bool
+    question_id: Optional[str] = None
+    prompt: Optional[str] = None
+    target_fact: Optional[str] = None
+    input_type: Optional[str] = "boolean"
+    options: list[str] = Field(default_factory=list)
+    relevance: Optional[str] = None
+    current_tier_goal: Optional[str] = None
+
+
+class FiredRuleItem(BaseModel):
+    rule_id: str
+    name: str
+    tier: str
+    certainty_factor: float
+    source: str
+    matched_conditions: list[str] = Field(default_factory=list)
+    explanation: str
+    override: bool = False
+
+
+class AssessmentResponse(BaseModel):
+    """Comprehensive triage evaluation response."""
+    tier: str
+    outcome: str
+    certainty_score: float
+    fired_rules: list[FiredRuleItem] = Field(default_factory=list)
+    forward_chaining_trace: list[str] = Field(default_factory=list)
+    backward_chaining_result: dict[str, Any] = Field(default_factory=dict)
+    explanation: str
+    rule_by_rule_explanation: list[str] = Field(default_factory=list)
+    disclaimer: str
+    activated_rules: list[str] = Field(default_factory=list)
