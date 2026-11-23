@@ -18,6 +18,9 @@ def test_health_endpoint():
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json() == {"status": "healthy"}
+    api_response = client.get("/api/health")
+    assert api_response.status_code == 200
+    assert api_response.json() == {"status": "healthy"}
 
 
 def test_list_rules_endpoint():

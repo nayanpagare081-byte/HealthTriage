@@ -82,7 +82,8 @@ export default function AssessmentForm({
   error,
   setError,
 }: AssessmentFormProps) {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+  // Uses NEXT_PUBLIC_API_URL when set (e.g. standalone dev), or relative URL in Vercel Services
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
   // Flow Mode: "standard" full form or "adaptive" question-by-question backward chaining
   const [flowMode, setFlowMode] = useState<"standard" | "adaptive">("standard");

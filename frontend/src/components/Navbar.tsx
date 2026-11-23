@@ -25,9 +25,10 @@ export default function Navbar({ onNewAssessment }: NavbarProps) {
 
   const checkBackendHealth = async () => {
     setIsChecking(true);
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+    // Uses NEXT_PUBLIC_API_URL when set (e.g. standalone dev), or relative URL in Vercel Services
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
     try {
-      const res = await fetch(`${apiUrl}/health`, {
+      const res = await fetch(`${apiUrl}/api/health`, {
         method: "GET",
         headers: { Accept: "application/json" },
         cache: "no-store",
