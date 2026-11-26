@@ -6,10 +6,10 @@ This report documents the verification and test execution of the **Health Triage
 
 ## Executive Summary
 
-- **Total Test Cases Executed**: 59
-- **Passed**: 59 (100%)
+- **Total Test Cases Executed**: 71
+- **Passed**: 71 (100%)
 - **Failed**: 0 (0%)
-- **Execution Date**: 2026-11-23
+- **Execution Date**: 2026-11-26
 - **Test Runner**: Pytest 9.2.0 on Python 3.14.8 (Windows)
 
 ---
@@ -101,6 +101,41 @@ To evaluate the impact of strict certainty requirements and the new over-escalat
 
 ---
 
+## Sensitivity Analysis 3: Uncertain Premise ("Not Sure") Impact on 20 Clinical Benchmark Cases
+
+To evaluate the operational behavior of the premise certainty factor model, all 20 clinical benchmark cases were re-executed with the primary premise (red-flag warning sign if present, or chief symptom) marked as "Not sure" ($CF = 0.50$):
+
+| Case ID | Scenario / Clinical Description | Original Tier | Uncertain Premise Tested | New Tier | Certainty Shift ($CF$) | Shift Verdict |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **CASE_01** | Emergency Red Flag R001: Severe breathing difficulty | `emergency` | Warning Sign: severe_breathing_difficulty | `urgent_care_today` | 1.00 $\rightarrow$ 0.50 | **CHANGED** (Override suppressed; safety floor enforced) |
+| **CASE_02** | Emergency Red Flag R002: Acute central chest pain | `emergency` | Warning Sign: chest_pain | `urgent_care_today` | 1.00 $\rightarrow$ 0.50 | **CHANGED** (Override suppressed; safety floor enforced) |
+| **CASE_03** | Emergency Red Flag R003: Unconsciousness or collapse | `emergency` | Warning Sign: unconsciousness | `urgent_care_today` | 1.00 $\rightarrow$ 0.50 | **CHANGED** (Override suppressed; safety floor enforced) |
+| **CASE_04** | Emergency Red Flag R004: Sudden new acute confusion | `emergency` | Warning Sign: new_confusion | `urgent_care_today` | 1.00 $\rightarrow$ 0.50 | **CHANGED** (Override suppressed; safety floor enforced) |
+| **CASE_05** | Emergency Red Flag R005: Severe uncontrolled bleeding | `emergency` | Warning Sign: severe_bleeding | `urgent_care_today` | 1.00 $\rightarrow$ 0.50 | **CHANGED** (Override suppressed; safety floor enforced) |
+| **CASE_06** | Emergency Red Flag R006: Stroke-like symptoms (FAST) | `emergency` | Warning Sign: stroke_like_symptoms | `urgent_care_today` | 1.00 $\rightarrow$ 0.50 | **CHANGED** (Override suppressed; safety floor enforced) |
+| **CASE_07** | Emergency Red Flag R007: Severe allergic reaction / anaphylaxis | `emergency` | Warning Sign: severe_allergic_reaction | `urgent_care_today` | 1.00 $\rightarrow$ 0.50 | **CHANGED** (Override suppressed; safety floor enforced) |
+| **CASE_08** | Emergency Red Flag R008: Coughing up blood (haemoptysis) | `emergency` | Warning Sign: coughing_blood | `urgent_care_today` | 1.00 $\rightarrow$ 0.50 | **CHANGED** (Override suppressed; safety floor enforced) |
+| **CASE_09** | Vulnerable Age: Infant under 3 months with fever | `emergency` | Symptom: fever | `emergency` | 0.95 $\rightarrow$ 0.47 | Unchanged (R009 emergency rule retained) |
+| **CASE_10** | Vulnerable Age: Infant 3-6 months with high fever | `urgent_care_today` | Symptom: fever | `urgent_care_today` | 0.85 $\rightarrow$ 0.42 | Unchanged (R010 urgent care retained) |
+| **CASE_11** | High-Risk: Pregnancy with acute abdominal pain | `urgent_care_today` | Symptom: abdominal_pain | `urgent_care_today` | 0.90 $\rightarrow$ 0.45 | Unchanged (R025 urgent care retained) |
+| **CASE_12** | High-Risk: Elderly diabetic patient with atypical chest discomfort | `urgent_care_today` | Symptom: chest_pain | `urgent_care_today` | 0.98 $\rightarrow$ 0.67 | Unchanged (R041/R039 urgent care retained) |
+| **CASE_13** | High-Risk: Acute cough exacerbation in COPD/Asthma | `urgent_care_today` | Symptom: cough | `urgent_care_today` | 0.85 $\rightarrow$ 0.42 | Unchanged (R015 urgent care retained) |
+| **CASE_14** | Boundary Threshold: Prolonged fever at exact 5-day cutoff (120h) | `see_doctor_soon` | Symptom: fever | `see_doctor_soon` | 0.80 $\rightarrow$ 0.40 | Unchanged (R011 retained) |
+| **CASE_15** | Boundary Threshold: Chronic cough at exact 3-week cutoff (504h) | `see_doctor_routine` | Symptom: cough | `see_doctor_routine` | 0.80 $\rightarrow$ 0.40 | Unchanged (R016 retained) |
+| **CASE_16** | Severe Dehydration: Diarrhoea with anuria / postural dizziness | `urgent_care_today` | Symptom: diarrhoea | `urgent_care_today` | 0.90 $\rightarrow$ 0.45 | Unchanged (R029 urgent care retained) |
+| **CASE_17** | Airway Threat: Sore throat with inability to swallow secretions | `emergency` | Symptom: sore_throat | `emergency` | 0.95 $\rightarrow$ 0.47 | Unchanged (R033 emergency retained) |
+| **CASE_18** | Self-Care: Standard healthy adult with mild tension-type headache | `self_care` | Symptom: headache | `self_care` | 0.80 $\rightarrow$ 0.40 | Unchanged ($0.40 \ge 0.35$ threshold) |
+| **CASE_19** | Conflicting Symptoms: Mild cough vs Red-Flag severe bleeding | `emergency` | Warning Sign: severe_bleeding | `urgent_care_today` | 1.00 $\rightarrow$ 0.50 | **CHANGED** (Override suppressed; safety floor enforced) |
+| **CASE_20** | No Rule Matched: Non-specific mild fatigue without matched rules | `no_rule_matched` | Symptom: mild fatigue | `no_rule_matched` | 0.00 $\rightarrow$ 0.00 | Unchanged |
+
+### Key Findings from Uncertain Premise Analysis:
+*   **Total Cases Changing Tier**: **9 of 20 (45%)**
+    *   **Cases 1–8 & 19 (Red-Flag Warning Signs)**: All 9 cases shift from `emergency` to `urgent_care_today`. Because the red-flag warning sign was marked "not sure", the immediate 999/112 ambulance override is safely suppressed, and the system enforces the non-negotiable safety floor of `urgent_care_today` while providing the explicit advisory: *"You were unsure about a serious warning sign. If it is present, call {emergency_number} now."*
+*   **Total Cases Invariant in Tier**: **11 of 20 (55%)**
+    *   Cases 9–17, 18, and 20 retain their baseline clinical tier while appropriately registering decreased certainty factors reflecting user uncertainty.
+
+---
+
 ## Unit Testing Component Breakdown
 
 | Test File | Target Module | Scope | Tests Run | Pass / Fail |
@@ -110,4 +145,6 @@ To evaluate the impact of strict certainty requirements and the new over-escalat
 | `tests/test_forward_chaining.py` | `inference/forward_chaining.py` | Fixed-point loop, fact derivation, self-care blocking | 6 | 6 / 0 |
 | `tests/test_backward_chaining.py` | `inference/backward_chaining.py` | Goal verification, adaptive question selection | 4 | 4 / 0 |
 | `tests/test_api.py` | `app/main.py` | Endpoints (`/health`, `/api/rules`, `/api/triage`, `/api/triage/next-question`), Pydantic validation | 8 | 8 / 0 |
+| `tests/test_regions.py` | `config/regions.py` | Regional numbers (IN=112, GB=999, US=911, AU=000, CA=911), fallback defaults, no 999 leak for IN | 5 | 5 / 0 |
+| `tests/test_premise_certainty.py` | `inference/fact_extraction.py` & `triage_service.py` | Premise CF assignment (0.5 vs 1.0), MYCIN conclusion scaling, self-care threshold fallback, red-flag safety floor, explanation premise transparency | 7 | 7 / 0 |
 | `tests/test_clinical_cases.py` | `services/triage_service.py` | 20 clinical benchmark scenarios & edge cases | 20 | 20 / 0 |

@@ -17,6 +17,11 @@ def normalize_token(token: str) -> str:
     return clean.strip("_")
 
 
+# Named certainty factor constants for clinical facts
+CERTAIN_PREMISE_CF: float = 1.0
+UNCERTAIN_PREMISE_CF: float = 0.5
+
+
 def extract_patient_facts(
     patient: Any,
     answered_facts: Optional[Dict[str, bool]] = None,
@@ -28,9 +33,12 @@ def extract_patient_facts(
     facts: Set[str] = set()
     fact_cfs: Dict[str, float] = {}
 
-    def add_fact(fact_key: str, cf: float = 1.0):
+    def add_fact(fact_key: str, cf: float = CERTAIN_PREMISE_CF):
         facts.add(fact_key)
-        fact_cfs[fact_key] = cf
+        if fact_key in fact_cfs:
+            fact_cfs[fact_key] = max(fact_cfs[fact_key], cf)
+        else:
+            fact_cfs[fact_key] = cf
 
     RED_FLAG_TOKENS = {
         "severe_breathing_difficulty",
@@ -43,63 +51,94 @@ def extract_patient_facts(
         "coughing_blood",
     }
 
+    # Extract user-reported uncertain tokens
+    uncertain_warning_signs_raw = getattr(patient, "uncertain_warning_signs", []) or []
+    uncertain_signs_set = {
+        normalize_token(s.value if hasattr(s, "value") else str(s))
+        for s in uncertain_warning_signs_raw
+    }
+
+    uncertain_symptoms_raw = getattr(patient, "uncertain_symptoms", []) or []
+    uncertain_symptoms_set = {
+        normalize_token(str(s))
+        for s in uncertain_symptoms_raw
+    }
+
     # 1. Warning Signs (Red Flags)
     warning_signs = getattr(patient, "warning_signs", []) or []
     for sign in warning_signs:
         val = sign.value if hasattr(sign, "value") else str(sign)
         token = normalize_token(val)
-        add_fact(token, 1.0)
-        add_fact(f"warning_sign:{token}", 1.0)
+        cf = UNCERTAIN_PREMISE_CF if token in uncertain_signs_set else CERTAIN_PREMISE_CF
+        add_fact(token, cf)
+        add_fact(f"warning_sign:{token}", cf)
+
+    # In case uncertain warning signs were specified only in uncertain_warning_signs
+    for sign in uncertain_warning_signs_raw:
+        val = sign.value if hasattr(sign, "value") else str(sign)
+        token = normalize_token(val)
+        if token not in facts:
+            add_fact(token, UNCERTAIN_PREMISE_CF)
+            add_fact(f"warning_sign:{token}", UNCERTAIN_PREMISE_CF)
 
     # 2. Symptoms
     symptoms = getattr(patient, "symptoms", []) or []
     for symptom in symptoms:
         token = normalize_token(str(symptom))
-        add_fact(f"symptom:{token}", 1.0)
+        cf = UNCERTAIN_PREMISE_CF if token in uncertain_symptoms_set else CERTAIN_PREMISE_CF
+        add_fact(f"symptom:{token}", cf)
         if token not in RED_FLAG_TOKENS:
-            add_fact(token, 1.0)
+            add_fact(token, cf)
         # Aliases / Sub-mappings
         if "stiff_neck" in token or "neck_stiffness" in token:
-            add_fact("symptom:stiff_neck", 1.0)
-            add_fact("stiff_neck", 1.0)
+            add_fact("symptom:stiff_neck", cf)
+            add_fact("stiff_neck", cf)
         if "fever" in token or "temperature" in token or "pyrexia" in token:
-            add_fact("symptom:fever", 1.0)
-            add_fact("fever", 1.0)
+            add_fact("symptom:fever", cf)
+            add_fact("fever", cf)
         if "cough" in token:
-            add_fact("symptom:cough", 1.0)
-            add_fact("cough", 1.0)
+            add_fact("symptom:cough", cf)
+            add_fact("cough", cf)
         if "headache" in token:
-            add_fact("symptom:headache", 1.0)
-            add_fact("headache", 1.0)
+            add_fact("symptom:headache", cf)
+            add_fact("headache", cf)
         if "throbbing" in token:
-            add_fact("symptom:throbbing_headache", 1.0)
+            add_fact("symptom:throbbing_headache", cf)
         if "scalp" in token or "scalp_tenderness" in token:
-            add_fact("symptom:scalp_tenderness", 1.0)
+            add_fact("symptom:scalp_tenderness", cf)
         if "abdomen" in token or "abdominal" in token or "stomach" in token or "belly" in token:
-            add_fact("symptom:abdominal_pain", 1.0)
-            add_fact("abdominal_pain", 1.0)
+            add_fact("symptom:abdominal_pain", cf)
+            add_fact("abdominal_pain", cf)
         if "right_lower" in token or "rlq" in token or "appendicitis" in token:
-            add_fact("symptom:right_lower_quadrant_pain", 1.0)
+            add_fact("symptom:right_lower_quadrant_pain", cf)
         if "diarrhoea" in token or "diarrhea" in token:
-            add_fact("symptom:diarrhoea", 1.0)
-            add_fact("diarrhoea", 1.0)
+            add_fact("symptom:diarrhoea", cf)
+            add_fact("diarrhoea", cf)
         if "dehydration" in token or "no_urine" in token or "dizziness" in token:
-            add_fact("symptom:severe_dehydration", 1.0)
+            add_fact("symptom:severe_dehydration", cf)
         if "sore_throat" in token or "pharyngitis" in token or "tonsillitis" in token:
-            add_fact("symptom:sore_throat", 1.0)
-            add_fact("sore_throat", 1.0)
+            add_fact("symptom:sore_throat", cf)
+            add_fact("sore_throat", cf)
         if "swallow" in token or "drooling" in token or "stridor" in token:
-            add_fact("symptom:inability_to_swallow", 1.0)
+            add_fact("symptom:inability_to_swallow", cf)
         if "chest_pain" in token or "chest_discomfort" in token or "chest_pressure" in token:
-            add_fact("symptom:chest_pain", 1.0)
+            add_fact("symptom:chest_pain", cf)
         if "pleuritic" in token or "inspiration" in token:
-            add_fact("symptom:pleuritic_chest_pain", 1.0)
+            add_fact("symptom:pleuritic_chest_pain", cf)
         if "reflux" in token or "heartburn" in token:
-            add_fact("symptom:acid_reflux", 1.0)
+            add_fact("symptom:acid_reflux", cf)
         if "tenderness" in token or "wall" in token:
-            add_fact("symptom:chest_wall_tenderness", 1.0)
+            add_fact("symptom:chest_wall_tenderness", cf)
         if "nausea" in token or "vomit" in token:
-            add_fact("symptom:nausea", 1.0)
+            add_fact("symptom:nausea", cf)
+
+    # In case uncertain symptoms were specified only in uncertain_symptoms
+    for symp in uncertain_symptoms_raw:
+        token = normalize_token(str(symp))
+        if f"symptom:{token}" not in facts:
+            add_fact(f"symptom:{token}", UNCERTAIN_PREMISE_CF)
+            if token not in RED_FLAG_TOKENS:
+                add_fact(token, UNCERTAIN_PREMISE_CF)
 
     # 3. Age Bands
     age = getattr(patient, "age", None)

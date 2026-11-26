@@ -91,3 +91,29 @@ The expert system implements a dual-paradigm architecture combining data-driven 
     3.  Identifies missing premises (e.g. "fever $\ge 5$ days", "pregnancy", "stiff neck").
     4.  Translates the missing clinical premise into a patient-friendly questionnaire item with its clinical rationale.
     5.  When the hypothesis is established or all rules for that tier are ruled out, moves down to the next tier or terminates with `has_next_question: false`.
+
+---
+
+## 7. The "Not Sure" Premise Certainty Model and Red-Flag Safety Floor
+
+### Premise Certainty Formulation:
+In real-world clinical triage, patients frequently exhibit uncertainty about whether a specific symptom or warning sign is present. To reflect this in probabilistic reasoning:
+*   **Certain Facts**: Assigned premise Certainty Factor $CF(e) = 1.0$ (`CERTAIN_PREMISE_CF`).
+*   **Uncertain Facts ("Not sure")**: Assigned premise Certainty Factor $CF(e) = 0.5$ (`UNCERTAIN_PREMISE_CF`).
+
+Conclusion certainty is evaluated via the standard MYCIN formula:
+$$CF(h, e) = CF(\text{rule}) \times \min_{p \in \text{premises}} CF(p)$$
+
+### The Red-Flag Safety Invariant:
+When an emergency warning sign (e.g. `chest_pain`, `severe_breathing_difficulty`, `severe_bleeding`, `unconsciousness`) is marked "not sure":
+1.  **Override Suppression**: Immediate dispatch emergency override (`override=True`) is suppressed because the evidence is not definitively confirmed.
+2.  **Safety Floor**: Under no circumstances does uncertainty cause down-triage to `self_care` or `no_rule_matched`. The system guarantees a **minimum tier floor of `urgent_care_today`** (with $CF \ge 0.50$).
+3.  **Mandatory Clinical Advisory**: The generated clinical explanation explicitly states:
+    > *"You were unsure about a serious warning sign. If it is present, call {emergency_number} now."*
+
+### Decision-Theoretic Justification (Cost Asymmetry):
+This design choice is mandated by the extreme asymmetry of clinical risk:
+*   **Cost of a False Negative (Missed Emergency)**: If an uncertain red flag were dismissed or triaged to self-care, a patient experiencing acute myocardial infarction, acute ischemic stroke, or major occult haemorrhage could suffer preventable cardiac arrest, permanent neurological deficit, or death at home.
+*   **Cost of a False Positive (Unnecessary Clinic Visit)**: Prompting the patient to be evaluated same-day at an urgent care centre or emergency facility incurs temporary personal inconvenience and consultation costs, but completely preserves life and physical safety.
+
+Because the expected clinical harm of a missed emergency vastly exceeds the cost of an urgent clinical consultation, the system strictly enforces the `urgent_care_today` floor for any ambiguous red flag.

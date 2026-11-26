@@ -85,17 +85,43 @@ class TriageService:
             reverse=True,  # Most urgent first
         )
 
+        # Check for user-reported uncertain warning signs / red flags
+        uncertain_warning_signs_reported = bool(
+            getattr(patient, "uncertain_warning_signs", [])
+        ) or any(
+            (
+                f.startswith("warning_sign:")
+                or f in {
+                    "severe_breathing_difficulty",
+                    "chest_pain",
+                    "unconsciousness",
+                    "new_confusion",
+                    "severe_bleeding",
+                    "stroke_like_symptoms",
+                    "severe_allergic_reaction",
+                    "coughing_blood",
+                }
+            )
+            and fact_cfs.get(f, 1.0) < 1.0
+            for f in facts
+        )
+
         selected_tier: str
         selected_cf: float
 
         if override_fired:
-            # Immediate emergency override
+            # Immediate emergency override for certain red flags
             selected_tier = TriageTier.EMERGENCY.value
             selected_cf = 1.0
         elif not forward_result.fired_rule_details:
             # No rules fired
-            selected_tier = TriageTier.NO_RULE_MATCHED.value
-            selected_cf = 0.0
+            if uncertain_warning_signs_reported:
+                # SAFETY RULE: Uncertain red flags must never result in no_rule_matched
+                selected_tier = TriageTier.URGENT_CARE_TODAY.value
+                selected_cf = 0.5
+            else:
+                selected_tier = TriageTier.NO_RULE_MATCHED.value
+                selected_cf = 0.0
         else:
             # Select the highest-urgency tier among all fired non-override rules
             # regardless of the confidence threshold (failing toward over-escalation).
@@ -116,6 +142,15 @@ class TriageService:
                 selected_tier = highest_tier
                 selected_cf = combined_cf
 
+            # SAFETY RULE: A red-flag warning sign marked "not sure" must never reduce triage.
+            # Treat it as follows: the result must be at least urgent_care_today.
+            if uncertain_warning_signs_reported:
+                current_rank = TIER_URGENCY_RANK.get(TriageTier(selected_tier), 0)
+                urgent_rank = TIER_URGENCY_RANK[TriageTier.URGENT_CARE_TODAY]
+                if current_rank < urgent_rank:
+                    selected_tier = TriageTier.URGENT_CARE_TODAY.value
+                    selected_cf = max(selected_cf, 0.5)
+
         # Backward compatible outcome string
         if selected_tier == TriageTier.EMERGENCY.value:
             outcome = "emergency_escalation"
@@ -127,10 +162,14 @@ class TriageService:
         # 7. Generate transparent rule-by-rule explanations
         rule_by_rule_explanations: List[str] = []
         for r in forward_result.fired_rule_details:
-            conds_str = ", ".join(r.matched_conditions) if r.matched_conditions else "clinical criteria"
+            premise_cf_parts = [
+                f"{p} (CF: {r.premise_cfs.get(p, 1.0):.2f})"
+                for p in r.matched_conditions
+            ]
+            conds_str = ", ".join(premise_cf_parts) if premise_cf_parts else "clinical criteria"
             expl = (
                 f"Rule {r.rule_id} fired because {conds_str}, giving tier '{r.tier}' "
-                f"with certainty {r.certainty_factor:.2f}. Source: {r.source}"
+                f"with resulting CF {r.certainty_factor:.2f}. Source: {r.source}"
             )
             rule_by_rule_explanations.append(expl)
 
@@ -164,6 +203,12 @@ class TriageService:
                 "This is NOT an all-clear or confirmation of safety. Please consult a qualified doctor if symptoms continue, worsen, or cause you concern."
             )
 
+        # SAFETY RULE ADVISORY: If unsure about a serious warning sign, append mandatory warning
+        if uncertain_warning_signs_reported:
+            unsure_msg = f"You were unsure about a serious warning sign. If it is present, call {emergency_number} now."
+            if unsure_msg not in explanation:
+                explanation = f"{explanation} {unsure_msg}"
+
         disclaimer = (
             "Academic prototype only. This expert system provides preliminary symptom reasoning and is NOT a diagnostic tool "
             "or medical device. It does not replace clinical judgment. Always consult a qualified doctor for medical advice or diagnosis."
@@ -177,6 +222,7 @@ class TriageService:
                 "certainty_factor": d.certainty_factor,
                 "source": d.source,
                 "matched_conditions": d.matched_conditions,
+                "premise_cfs": getattr(d, "premise_cfs", {}),
                 "explanation": d.explanation,
                 "override": d.override,
             }

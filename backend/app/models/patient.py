@@ -46,6 +46,8 @@ class PatientInput(BaseModel):
         default=None, max_length=1000
     )
     region: Optional[str] = Field(default="IN", max_length=50)
+    uncertain_symptoms: list[str] = Field(default_factory=list)
+    uncertain_warning_signs: list[str] = Field(default_factory=list)
 
 
 class NextQuestionRequest(BaseModel):
@@ -79,6 +81,7 @@ class FiredRuleItem(BaseModel):
     certainty_factor: float
     source: str
     matched_conditions: list[str] = Field(default_factory=list)
+    premise_cfs: dict[str, float] = Field(default_factory=dict)
     explanation: str
     override: bool = False
 

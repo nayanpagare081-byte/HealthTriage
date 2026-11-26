@@ -464,12 +464,32 @@ export default function AssessmentResultView({
                               <strong>Clinical Explanation:</strong> {rule.explanation}
                             </p>
                             {rule.matched_conditions && rule.matched_conditions.length > 0 && (
-                              <p className="text-[#718096]">
-                                <strong>Matched Premises:</strong>{" "}
-                                <span className="font-mono text-slate-700">
-                                  {rule.matched_conditions.join(", ")}
-                                </span>
-                              </p>
+                              <div className="text-[#718096] pt-1">
+                                <strong>Matched Premises &amp; Premise Certainty:</strong>{" "}
+                                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                                  {rule.matched_conditions.map((prem) => {
+                                    const cf = rule.premise_cfs ? rule.premise_cfs[prem] : undefined;
+                                    const isUncertain = cf !== undefined && cf < 1.0;
+                                    return (
+                                      <span
+                                        key={prem}
+                                        className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-mono font-medium border ${
+                                          isUncertain
+                                            ? "bg-amber-50 text-amber-900 border-amber-300 ring-1 ring-amber-300/30"
+                                            : "bg-slate-100 text-slate-800 border-slate-200"
+                                        }`}
+                                      >
+                                        <span>{prem}</span>
+                                        {cf !== undefined && (
+                                          <span className={`font-bold ${isUncertain ? "text-amber-700" : "text-[#247BA0]"}`}>
+                                            (CF: {cf.toFixed(2)})
+                                          </span>
+                                        )}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                              </div>
                             )}
                           </div>
 

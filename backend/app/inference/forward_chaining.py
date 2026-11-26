@@ -26,6 +26,7 @@ class FiredRuleDetail:
     matched_conditions: List[str]
     explanation: str
     override: bool = False
+    premise_cfs: Dict[str, float] = field(default_factory=dict)
 
 
 @dataclass
@@ -93,6 +94,16 @@ class ForwardChainingEngine:
                         if p in result.facts
                     ] or list(rule.conditions)
 
+                    # Capture individual premise CFs
+                    matched_premise_cfs = {
+                        p: cfs.get(p, 1.0) for p in matched_premises
+                    }
+                    min_premise = (
+                        min(matched_premise_cfs.values())
+                        if matched_premise_cfs
+                        else 1.0
+                    )
+
                     # Compute conclusion CF using MYCIN rule
                     rule_cf = CertaintyFactorEngine.evaluate_rule_cf(
                         rule.certainty_factor,
@@ -100,11 +111,25 @@ class ForwardChainingEngine:
                         cfs,
                     )
 
+                    # For red-flag override rules (R001-R008):
+                    # - If premises are certain (CF 1.0), override is enabled with emergency tier.
+                    # - If any premise is uncertain (CF < 1.0), override is disabled and tier is urgent_care_today.
+                    if rule.override:
+                        if min_premise >= 1.0:
+                            effective_override = True
+                            tier_value = rule.tier.value
+                        else:
+                            effective_override = False
+                            tier_value = TriageTier.URGENT_CARE_TODAY.value
+                    else:
+                        effective_override = False
+                        tier_value = rule.tier.value
+
                     result.activated_rules.append(rule.rule_id)
 
                     explanation = rule.explanation_template or rule.name
                     reasoning_entry = (
-                        f"{rule.rule_id}: {rule.name} -> concluded {rule.tier.value} "
+                        f"{rule.rule_id}: {rule.name} -> concluded {tier_value} "
                         f"(CF: {rule_cf:.2f}, Source: {rule.source})"
                     )
                     result.reasoning_trace.append(reasoning_entry)
@@ -113,24 +138,25 @@ class ForwardChainingEngine:
                         FiredRuleDetail(
                             rule_id=rule.rule_id,
                             name=rule.name,
-                            tier=rule.tier.value,
+                            tier=tier_value,
                             certainty_factor=rule_cf,
                             source=rule.source,
                             matched_conditions=matched_premises,
                             explanation=explanation,
-                            override=rule.override,
+                            override=effective_override,
+                            premise_cfs=matched_premise_cfs,
                         )
                     )
 
                     # Add conclusions to derived facts
-                    conclusion_str = rule.tier.value
+                    conclusion_str = tier_value
                     if conclusion_str not in result.facts:
                         result.facts.add(conclusion_str)
                         result.conclusions.add(conclusion_str)
                         changed = True
 
                     # Preserve backward compatibility for emergency conclusion alias
-                    if rule.tier == TriageTier.EMERGENCY:
+                    if tier_value == TriageTier.EMERGENCY.value:
                         result.facts.add("emergency_escalation")
                         result.conclusions.add("emergency_escalation")
 

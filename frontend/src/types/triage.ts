@@ -47,6 +47,7 @@ export interface FiredRuleInfo {
   certainty_factor: number;
   source: string;
   matched_conditions: string[];
+  premise_cfs?: Record<string, number>;
   explanation: string;
   override?: boolean;
 }

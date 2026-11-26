@@ -113,6 +113,8 @@ export default function AssessmentForm({
     "chest_pain",
     "severe_breathing_difficulty",
   ]);
+  const [uncertainSymptoms, setUncertainSymptoms] = useState<string[]>([]);
+  const [uncertainWarningSigns, setUncertainWarningSigns] = useState<WarningSignId[]>([]);
 
   // Adaptive Flow State
   const [adaptiveStep, setAdaptiveStep] = useState<"initial" | "asking" | "completed">("initial");
@@ -123,10 +125,26 @@ export default function AssessmentForm({
 
   // Helpers
   const toggleWarningSign = (signKey: WarningSignId) => {
-    setWarningSigns((current) =>
-      current.includes(signKey)
-        ? current.filter((k) => k !== signKey)
-        : [...current, signKey]
+    setWarningSigns((current) => {
+      const exists = current.includes(signKey);
+      if (exists) {
+        setUncertainWarningSigns((u) => u.filter((k) => k !== signKey));
+        return current.filter((k) => k !== signKey);
+      }
+      return [...current, signKey];
+    });
+  };
+
+  const toggleUncertainSymptom = (symp: string) => {
+    const key = symp.trim().toLowerCase();
+    setUncertainSymptoms((curr) =>
+      curr.includes(key) ? curr.filter((s) => s !== key) : [...curr, key]
+    );
+  };
+
+  const toggleUncertainWarningSign = (signKey: WarningSignId) => {
+    setUncertainWarningSigns((curr) =>
+      curr.includes(signKey) ? curr.filter((s) => s !== signKey) : [...curr, signKey]
     );
   };
 
@@ -198,6 +216,8 @@ export default function AssessmentForm({
     setMedicalHistory([]);
     setRiskFactors([]);
     setWarningSigns([]);
+    setUncertainSymptoms([]);
+    setUncertainWarningSigns([]);
     setTempC("");
     setHeartRate("");
     setRespRate("");
@@ -254,6 +274,8 @@ export default function AssessmentForm({
       vital_signs: vitalSignsPayload,
       additional_information: additionalNotes.trim() ? additionalNotes.trim() : null,
       region: region,
+      uncertain_symptoms: uncertainSymptoms,
+      uncertain_warning_signs: uncertainWarningSigns,
       ...overridePayload,
     };
 
@@ -769,6 +791,53 @@ export default function AssessmentForm({
                     ))}
                   </div>
                 </div>
+
+                {/* Active Symptoms with "Not sure" Checkbox */}
+                {symptomsInput.trim().length > 0 && (
+                  <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50/70 p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-700">
+                        Active Symptoms Certainty:
+                      </span>
+                      <span className="text-[10px] text-slate-500">
+                        Check &quot;Not sure&quot; if reported with uncertainty (premise CF: 0.50)
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {symptomsInput
+                        .split(",")
+                        .map((s) => s.trim())
+                        .filter(Boolean)
+                        .map((symp) => {
+                          const norm = symp.toLowerCase();
+                          const isUncertain = uncertainSymptoms.includes(norm);
+                          return (
+                            <div
+                              key={symp}
+                              className={`inline-flex items-center gap-2 rounded-lg border px-2.5 py-1 text-xs transition-colors ${
+                                isUncertain
+                                  ? "border-amber-300 bg-amber-50 text-amber-900 ring-1 ring-amber-300/40"
+                                  : "border-slate-200 bg-white text-slate-800"
+                              }`}
+                            >
+                              <span className="font-semibold">{symp}</span>
+                              <label className="inline-flex items-center gap-1.5 text-[11px] text-slate-600 cursor-pointer pl-2 border-l border-slate-200 hover:text-amber-700">
+                                <input
+                                  type="checkbox"
+                                  checked={isUncertain}
+                                  onChange={() => toggleUncertainSymptom(norm)}
+                                  className="h-3.5 w-3.5 rounded border-slate-300 text-amber-600 focus:ring-amber-500 accent-amber-600"
+                                />
+                                <span className={isUncertain ? "font-bold text-amber-800" : ""}>
+                                  Not sure?
+                                </span>
+                              </label>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Severity Slider */}
@@ -1014,6 +1083,24 @@ export default function AssessmentForm({
                       <p className="text-[11px] leading-relaxed text-[#718096]">
                         {rule.clinical_rationale}
                       </p>
+                      {isChecked && rule.sign_key && (
+                        <div className="pt-1.5">
+                          <label
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center gap-1.5 rounded-md bg-amber-100/90 border border-amber-300 px-2 py-0.5 text-[11px] text-amber-900 cursor-pointer hover:bg-amber-100"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={uncertainWarningSigns.includes(rule.sign_key)}
+                              onChange={() => toggleUncertainWarningSign(rule.sign_key!)}
+                              className="h-3.5 w-3.5 rounded border-amber-400 text-amber-600 focus:ring-amber-500 accent-amber-600"
+                            />
+                            <span className="font-semibold">
+                              Not sure if present (Premise CF: 0.50)
+                            </span>
+                          </label>
+                        </div>
+                      )}
                     </div>
                   </label>
                 );
