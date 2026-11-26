@@ -15,17 +15,22 @@ The system models preliminary clinical triage for the general public (patients n
 
 ### Key Capabilities:
 - **5-Tier Urgency Classification**:
-  - `emergency`: Immediate life-threatening emergency care (999 / A&E).
-  - `urgent_care_today`: Same-day clinical assessment (urgent treatment centre, NHS 111, urgent GP).
+  - `emergency`: Immediate life-threatening emergency care (localized emergency number, e.g., `112 / 108` in India, `999` in UK, `911` in US/CA, `000` in AU).
+  - `urgent_care_today`: Same-day clinical assessment (urgent care clinic, same-day primary care doctor, or emergency/urgent services).
   - `see_doctor_soon`: Medical evaluation within 24 to 48 hours.
   - `see_doctor_routine`: Non-urgent appointment for chronic or mild subacute symptoms.
   - `self_care`: Supportive home management with hydration, rest, and antipyretics.
   - `no_rule_matched`: Safe fallback advisory when symptoms do not match configured production rules.
-- **Red-Flag Override**: Immediate life threats (acute central chest pain, respiratory distress, anaphylaxis, stroke symptoms) bypass mathematical certainty calculations to prevent under-triage.
+- **Region-Aware Emergency Numbers**: Configurable `region` (default `IN` -> `112` / `108`) dynamically adapts all emergency callouts, triage narratives, and UI badges (`IN`, `GB`, `US`, `AU`, `CA`).
+- **"Not Sure" Premise Certainty & Red-Flag Safety Floor**:
+  - Users can mark any symptom or warning sign as **"Not sure?"** (`uncertain_symptoms`, `uncertain_warning_signs`), assigning a premise CF of `0.50` (vs `1.00` for certain facts).
+  - Uncertain red flags suppress immediate emergency override while strictly enforcing a minimum **`urgent_care_today`** safety floor and displaying an explicit emergency-call advisory.
+  - Low-confidence `self_care` outcomes below the confidence threshold automatically escalate to `see_doctor_routine`.
+- **Red-Flag Override**: Confirmed life threats (`R001`–`R008` with certain premises) bypass mathematical certainty calculations to prevent under-triage.
 - **Self-Care Safety Guards**: Self-care recommendations are programmatically barred from firing if any red flag, vulnerable age group (<5 years or &ge;65 years), or chronic risk factor is present.
 - **Over-Escalation Fail-Safe**: On conflicting evidence or marginal certainty, the inference engine chooses the more urgent clinical tier.
 - **Dual-Chaining Architecture**:
-  - **Forward Chaining**: Iterates to a fixed point from patient facts, computing MYCIN certainty factors and recording step-by-step reasoning traces.
+  - **Forward Chaining**: Iterates to a fixed point from patient facts, computing MYCIN certainty factors and recording step-by-step reasoning traces with per-premise CFs.
   - **Backward Chaining**: Goal-directed prover evaluating hypotheses from highest urgency downward, powering an interactive adaptive questionnaire (`POST /api/triage/next-question`).
 
 ---
@@ -56,6 +61,7 @@ The knowledge base (`backend/app/knowledge_base/rules.py`) contains **41 clinica
 | **Icons & Design** | Lucide React, Geist Fonts | Modern accessible UI components |
 | **AI Reasoning** | Hand-crafted Forward Chaining, Backward Chaining, MYCIN Certainty Factors | Pure Python rule engine without third-party black-box libraries |
 | **Test Suite** | Pytest, FastAPI TestClient, AnyIO | 71 automated unit and end-to-end clinical benchmark tests |
+| **CI/CD & Hosting** | GitHub Actions, ESLint 9, Vercel Services | Automated backend/frontend CI checks and multi-service Vercel deployment |
 
 ---
 
@@ -63,20 +69,27 @@ The knowledge base (`backend/app/knowledge_base/rules.py`) contains **41 clinica
 
 ```text
 HealthTriage/
+├── .github/
+│   └── workflows/
+│       └── ci.yml                    # GitHub Actions CI (backend pytest + frontend build)
 ├── README.md                         # Project documentation and user guide
+├── vercel.json                       # Vercel multi-service config (FastAPI + Next.js + bindings)
 ├── backend/
+│   ├── main.py                       # Vercel FastAPI entrypoint
 │   ├── app/
+│   │   ├── config/
+│   │   │   └── regions.py            # Region-aware emergency numbers (IN, GB, US, AU, CA)
 │   │   ├── inference/
 │   │   │   ├── backward_chaining.py  # Goal-directed prover and adaptive question selector
 │   │   │   ├── certainty_factor.py   # MYCIN-style evidence combination engine
-│   │   │   ├── fact_extraction.py    # Patient proposition extractor and normalizer
+│   │   │   ├── fact_extraction.py    # Patient proposition extractor & premise CF (1.0 / 0.5)
 │   │   │   └── forward_chaining.py   # Fixed-point forward chaining production engine
 │   │   ├── knowledge_base/
-│   │   │   └── rules.py              # 40 clinical production rules, tiers, and self-care guards
+│   │   │   └── rules.py              # 41 clinical production rules, tiers, and self-care guards
 │   │   ├── models/
 │   │   │   └── patient.py            # Pydantic schemas for patient inputs and triage outputs
 │   │   ├── services/
-│   │   │   └── triage_service.py     # Triage orchestration service and over-escalation logic
+│   │   │   └── triage_service.py     # Triage orchestration, safety floor, and explanations
 │   │   └── main.py                   # FastAPI application routes and CORS setup
 │   ├── tests/
 │   │   ├── test_api.py               # API endpoint and payload validation tests
@@ -84,6 +97,8 @@ HealthTriage/
 │   │   ├── test_certainty_factor.py  # MYCIN mathematical calculation tests
 │   │   ├── test_clinical_cases.py    # 20 End-to-end clinical benchmark scenarios
 │   │   ├── test_forward_chaining.py  # Forward chaining fixed-point tests
+│   │   ├── test_premise_certainty.py # "Not sure" premise CF & red-flag safety floor tests
+│   │   ├── test_regions.py           # Region emergency number resolution tests
 │   │   └── test_rules.py             # Rule model, override flags, and self-care guard tests
 │   ├── requirements.txt              # Backend dependencies
 │   └── .venv/                        # Python virtual environment
@@ -92,13 +107,19 @@ HealthTriage/
     ├── .env.local                    # Local environment variables (NEXT_PUBLIC_API_URL)
     ├── package.json                  # Node dependencies and scripts
     └── src/
-        ├── app/                      # Next.js App Router root layout and page
+        ├── app/
+        │   ├── api/[...path]/route.ts # Server-side API proxy (Vercel BACKEND_URL / local)
+        │   ├── globals.css           # Tailwind CSS v4 global styles
+        │   ├── layout.tsx            # Root Next.js App Router layout
+        │   └── page.tsx              # Main application page
         ├── components/
-        │   ├── AssessmentForm.tsx    # Adaptive and standard patient assessment forms
-        │   ├── AssessmentResultView.tsx # Multi-tier visualizer and rule explanations
-        │   ├── DisclaimerBanner.tsx  # Pre-assessment safety warning
-        │   ├── KnowledgeBaseTable.tsx# Interactive browser for all 40 production rules
-        │   └── Navbar.tsx            # Navigation and backend live health status indicator
+        │   ├── AssessmentForm.tsx    # Adaptive & standard forms, region selector, "Not sure" toggles
+        │   ├── AssessmentResultView.tsx # Multi-tier visualizer, premise CFs & rule explanations
+        │   ├── Footer.tsx            # Application footer and academic disclaimer
+        │   ├── HeroSection.tsx       # Landing overview and clinical safeguards
+        │   ├── KnowledgeBaseTable.tsx# Interactive browser for all 41 production rules
+        │   ├── Navbar.tsx            # Navigation and backend live health status indicator
+        │   └── SystemArchitecture.tsx# Dual-chaining architecture visualization
         ├── data/                     # Preset demo cases and rules metadata
         └── types/
             └── triage.ts             # TypeScript interfaces for API contracts
@@ -149,7 +170,19 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000` in your web browser. The frontend automatically reads the backend API URL from `NEXT_PUBLIC_API_URL` (defaulting to `http://127.0.0.1:8000`).
+Open `http://localhost:3000` in your web browser. The frontend automatically reads `NEXT_PUBLIC_API_URL` (defaulting to `http://127.0.0.1:8000` locally, or routing through `/api/[...path]` via Vercel's `BACKEND_URL` binding in production).
+
+To verify frontend linting and production build:
+
+```powershell
+npm run lint
+npm run build
+```
+
+### 4. Multi-Service Deployment (Vercel)
+The repository includes [`vercel.json`](vercel.json) configured for Vercel Services:
+- `backend` (`FastAPI`, entrypoint `backend/main.py`) served at `/api/(.*)`
+- `frontend` (`Next.js`, root `frontend/`) served at `/(.*)` with a `BACKEND_URL` service binding to `backend`.
 
 ---
 
