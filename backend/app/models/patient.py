@@ -45,6 +45,7 @@ class PatientInput(BaseModel):
     additional_information: Optional[str] = Field(
         default=None, max_length=1000
     )
+    region: Optional[str] = Field(default="IN", max_length=50)
 
 
 class NextQuestionRequest(BaseModel):
@@ -87,6 +88,8 @@ class AssessmentResponse(BaseModel):
     tier: str
     outcome: str
     certainty_score: float
+    emergency_number: str = "112"
+    region: str = "IN"
     fired_rules: list[FiredRuleItem] = Field(default_factory=list)
     forward_chaining_trace: list[str] = Field(default_factory=list)
     backward_chaining_result: dict[str, Any] = Field(default_factory=dict)

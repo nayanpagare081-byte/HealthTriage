@@ -89,6 +89,7 @@ export default function AssessmentForm({
   const [flowMode, setFlowMode] = useState<"standard" | "adaptive">("standard");
 
   // Form State
+  const [region, setRegion] = useState<string>("IN");
   const [age, setAge] = useState<string>("58");
   const [symptomsInput, setSymptomsInput] = useState<string>(
     "Substernal chest pressure, Shortness of breath, Diaphoresis"
@@ -190,6 +191,7 @@ export default function AssessmentForm({
 
   const resetForm = () => {
     setAge("30");
+    setRegion("IN");
     setSymptomsInput("");
     setDuration("");
     setSeverity(5);
@@ -251,6 +253,7 @@ export default function AssessmentForm({
       risk_factors: riskFactors.filter((item) => item !== "None"),
       vital_signs: vitalSignsPayload,
       additional_information: additionalNotes.trim() ? additionalNotes.trim() : null,
+      region: region,
       ...overridePayload,
     };
 
@@ -658,7 +661,31 @@ export default function AssessmentForm({
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-3">
+              {/* Region input */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[#10243A]">
+                  Region / Emergency Services
+                </label>
+                <div className="mt-2">
+                  <select
+                    value={region}
+                    onChange={(e) => setRegion(e.target.value)}
+                    aria-label="Select Region"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-[#243447] focus:border-[#247BA0] focus:ring-2 focus:ring-[#247BA0]/20 focus:outline-none"
+                  >
+                    <option value="IN">India (112 / 108)</option>
+                    <option value="GB">United Kingdom (999)</option>
+                    <option value="US">United States (911)</option>
+                    <option value="AU">Australia (000)</option>
+                    <option value="CA">Canada (911)</option>
+                  </select>
+                </div>
+                <p className="mt-1.5 text-[11px] text-[#718096]">
+                  Sets localized emergency numbers
+                </p>
+              </div>
+
               {/* Age input */}
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[#10243A]">

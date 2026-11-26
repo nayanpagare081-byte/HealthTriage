@@ -30,6 +30,7 @@ export default function AssessmentResultView({
   const [activeTab, setActiveTab] = useState<"summary" | "rules" | "forward" | "backward">("summary");
 
   const tier = (result.tier || result.outcome || "").toLowerCase();
+  const emergencyNumber = result.emergency_number || "112";
 
   // Tier Styling Configurations
   const getTierConfig = (tierName: string) => {
@@ -46,11 +47,17 @@ export default function AssessmentResultView({
           barColor: "bg-red-600",
           calloutIcon: <PhoneCall className="h-5 w-5 text-red-600 shrink-0" />,
           callout: (
-            <span>
-              <strong>Immediate Emergency Action Required:</strong> Critical life-threatening
-              warning signs detected. Call emergency services immediately (dial 999 / 911 / 112)
-              or attend the nearest emergency department.
-            </span>
+            <div>
+              <span>
+                <strong>Immediate Emergency Action Required:</strong> Critical life-threatening
+                warning signs detected. Call emergency services immediately (dial {emergencyNumber})
+                or attend the nearest emergency department.
+              </span>
+              <div className="mt-2 inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-1 text-xs font-bold text-white shadow-xs">
+                <PhoneCall className="h-3.5 w-3.5" />
+                <span>Call Emergency: {emergencyNumber}</span>
+              </div>
+            </div>
           ),
         };
       case "urgent_care_today":
@@ -64,11 +71,16 @@ export default function AssessmentResultView({
           barColor: "bg-orange-500",
           calloutIcon: <Clock className="h-5 w-5 text-orange-600 shrink-0" />,
           callout: (
-            <span>
-              <strong>Same-Day Care Recommended:</strong> Acute symptoms or high-risk factors
-              require same-day clinical assessment (visit an urgent care centre, contact NHS 111,
-              or book a same-day GP appointment).
-            </span>
+            <div>
+              <span>
+                <strong>Same-Day Care Recommended:</strong> Acute symptoms or high-risk factors
+                require same-day clinical assessment (visit an urgent care clinic or same-day primary care doctor).
+              </span>
+              <div className="mt-2 inline-flex items-center gap-2 rounded-lg bg-orange-600 px-3 py-1 text-xs font-semibold text-white shadow-xs">
+                <PhoneCall className="h-3.5 w-3.5" />
+                <span>If condition deteriorates rapidly, call {emergencyNumber} immediately</span>
+              </div>
+            </div>
           ),
         };
       case "see_doctor_soon":

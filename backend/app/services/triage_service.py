@@ -2,6 +2,7 @@
 
 from typing import Any, Dict, List, Optional, Set
 
+from app.config.regions import get_region_info
 from app.inference.backward_chaining import BackwardChainingEngine, QuestionItem
 from app.inference.certainty_factor import CertaintyFactorEngine
 from app.inference.fact_extraction import extract_patient_facts
@@ -34,6 +35,17 @@ class TriageService:
         5. Select tier applying over-escalation fail-safe.
         6. Generate transparent rule-by-rule clinical explanations.
         """
+        # Resolve patient region and emergency contact numbers
+        req_region = getattr(patient, "region", "IN") or "IN"
+        region_info = get_region_info(req_region)
+        emergency_number = region_info["emergency_number"]
+        emergency_facility = region_info["emergency_facility"]
+        urgent_care_descriptor = region_info["urgent_care_descriptor"]
+        norm_code = req_region.strip().upper() if isinstance(req_region, str) else "IN"
+        if norm_code == "UK":
+            norm_code = "GB"
+        resolved_region = norm_code if norm_code in ["IN", "GB", "US", "AU", "CA"] else "IN"
+
         # 1. Fact extraction
         facts, fact_cfs = extract_patient_facts(patient)
 
@@ -126,12 +138,12 @@ class TriageService:
         if selected_tier == TriageTier.EMERGENCY.value:
             explanation = (
                 "EMERGENCY: One or more life-threatening warning signs or critical red flags were identified. "
-                "Immediate emergency services (such as 999 or nearest emergency department) are required."
+                f"Immediate emergency services (such as calling {emergency_number} or attending the {emergency_facility}) are required."
             )
         elif selected_tier == TriageTier.URGENT_CARE_TODAY.value:
             explanation = (
                 "URGENT CARE: Significant acute symptoms or high-risk clinical factors were detected. "
-                "Same-day clinical evaluation (urgent treatment centre, NHS 111, or same-day GP) is strongly recommended."
+                f"Same-day clinical evaluation ({urgent_care_descriptor}) is strongly recommended."
             )
         elif selected_tier == TriageTier.SEE_DOCTOR_SOON.value:
             explanation = (
@@ -175,6 +187,8 @@ class TriageService:
             "tier": selected_tier,
             "outcome": outcome,
             "certainty_score": selected_cf,
+            "emergency_number": emergency_number,
+            "region": resolved_region,
             "fired_rules": fired_rules_payload,
             "activated_rules": forward_result.activated_rules,
             "forward_chaining": {

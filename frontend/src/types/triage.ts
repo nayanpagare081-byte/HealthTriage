@@ -35,6 +35,9 @@ export interface PatientInputPayload {
   risk_factors: string[];
   vital_signs: VitalSigns;
   additional_information?: string | null;
+  region?: string;
+  uncertain_symptoms?: string[];
+  uncertain_warning_signs?: string[];
 }
 
 export interface FiredRuleInfo {
@@ -52,6 +55,8 @@ export interface AssessmentResult {
   tier: string;
   outcome: "emergency_escalation" | "insufficient_information" | string;
   certainty_score: number;
+  emergency_number?: string;
+  region?: string;
   fired_rules?: FiredRuleInfo[];
   activated_rules: string[];
   forward_chaining: {

@@ -32,7 +32,7 @@ CLINICAL_QUESTIONS_REGISTRY: Dict[str, Dict[str, Any]] = {
         "question_id": "Q_BREATHING",
         "prompt": "Are you experiencing severe breathing difficulty, such as gasping, rapid breathing, or being unable to speak in full sentences?",
         "input_type": "boolean",
-        "relevance": "Screens for critical airway and respiratory compromise requiring 999 emergency services.",
+        "relevance": "Screens for critical airway and respiratory compromise requiring immediate emergency services.",
     },
     "chest_pain": {
         "question_id": "Q_CHEST_PAIN",
