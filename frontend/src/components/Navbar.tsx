@@ -46,9 +46,34 @@ export default function Navbar({ onNewAssessment }: NavbarProps) {
   };
 
   useEffect(() => {
-    checkBackendHealth();
-    const interval = setInterval(checkBackendHealth, 30000);
-    return () => clearInterval(interval);
+    let active = true;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+
+    const pollHealth = async () => {
+      try {
+        const res = await fetch(`${apiUrl}/api/health`, {
+          method: "GET",
+          headers: { Accept: "application/json" },
+          cache: "no-store",
+        });
+        if (active) {
+          setBackendStatus(res.ok ? "connected" : "offline");
+        }
+      } catch {
+        if (active) {
+          setBackendStatus("offline");
+        }
+      }
+    };
+
+    void pollHealth();
+    const interval = setInterval(() => {
+      void pollHealth();
+    }, 30000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
   }, []);
 
   return (

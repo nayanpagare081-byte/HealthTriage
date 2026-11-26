@@ -2,15 +2,9 @@
 
 import {
   Cpu,
-  Layers,
   ArrowRight,
-  ShieldCheck,
   GitMerge,
   Target,
-  Calculator,
-  FileCheck2,
-  Database,
-  ArrowDown,
 } from "lucide-react";
 
 export default function SystemArchitecture() {

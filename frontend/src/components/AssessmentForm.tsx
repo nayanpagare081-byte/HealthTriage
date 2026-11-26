@@ -5,8 +5,6 @@ import {
   Activity,
   AlertTriangle,
   HeartPulse,
-  Clock,
-  User,
   Stethoscope,
   ChevronDown,
   ChevronUp,
@@ -19,7 +17,6 @@ import {
   Loader2,
   HelpCircle,
   ArrowRight,
-  CheckCircle2,
 } from "lucide-react";
 import {
   WarningSignId,

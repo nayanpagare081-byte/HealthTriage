@@ -5,10 +5,7 @@ import {
   ArrowRight,
   HelpCircle,
   FileCheck2,
-  Cpu,
-  Activity,
   HeartPulse,
-  Sparkles,
   GitCommit,
   Check,
 } from "lucide-react";

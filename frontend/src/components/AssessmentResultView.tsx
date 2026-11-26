@@ -577,7 +577,7 @@ export default function AssessmentResultView({
                     Backward Chaining Goal Verification
                   </h3>
                   <p className="text-xs text-[#718096]">
-                    Goal-driven prover evaluating hypothesis '{result.backward_chaining.goal}'.
+                    Goal-driven prover evaluating hypothesis &apos;{result.backward_chaining.goal}&apos;.
                   </p>
                 </div>
 

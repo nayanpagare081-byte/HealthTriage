@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { BookOpen, Search, ShieldAlert, ExternalLink, Filter } from "lucide-react";
+import { BookOpen, Search, ShieldAlert } from "lucide-react";
 import { KNOWLEDGE_BASE_RULES } from "../data/rulesData";
 
 interface RuleItem {
@@ -202,7 +202,7 @@ export default function KnowledgeBaseTable() {
                 ) : (
                   <tr>
                     <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
-                      No matching production rules found for "{searchQuery}".
+                      No matching production rules found for &quot;{searchQuery}&quot;.
                     </td>
                   </tr>
                 )}

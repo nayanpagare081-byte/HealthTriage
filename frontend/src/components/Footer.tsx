@@ -1,6 +1,6 @@
 "use client";
 
-import { ShieldAlert, ArrowUp, Activity, Terminal } from "lucide-react";
+import { ShieldAlert, ArrowUp, Activity } from "lucide-react";
 
 export default function Footer() {
   const scrollToTop = () => {
