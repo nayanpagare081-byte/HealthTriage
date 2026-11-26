@@ -1,5 +1,7 @@
 # Health Triage & Symptom Reasoning Expert System
 
+[![CI](https://github.com/nayanpagare081-byte/HealthTriage/actions/workflows/ci.yml/badge.svg)](https://github.com/nayanpagare081-byte/HealthTriage/actions/workflows/ci.yml)
+
 An academic rule-based artificial intelligence expert system demonstrating clinical symptom reasoning, multi-tier urgency classification, forward and backward chaining, and MYCIN certainty factor evidence combination.
 
 > **CRITICAL MEDICAL SAFEGUARD & ACADEMIC DISCLAIMER:**  
@@ -30,18 +32,18 @@ The system models preliminary clinical triage for the general public (patients n
 
 ## 2. Knowledge Base & Clinical Rules
 
-The knowledge base (`backend/app/knowledge_base/rules.py`) contains **40 clinical production rules** spanning 8 symptom clusters:
+The knowledge base (`backend/app/knowledge_base/rules.py`) contains **41 clinical production rules** spanning 8 symptom clusters:
 
-1. **Emergency Red Flags (R001–R008)**: Breathing difficulty, crushing chest pain, unconsciousness, acute delirium, severe bleeding, stroke signs, anaphylaxis, coughing blood (NHS 999 Guidelines).
+1. **Emergency Red Flags (R001–R008)**: Breathing difficulty, crushing chest pain, unconsciousness, acute delirium, severe bleeding, stroke signs, anaphylaxis, coughing blood (NHS 111 / 999 Guidelines).
 2. **Fever Cluster (R009–R014)**: Infant <3 months fever (NICE NG143), infant 3–6 months high fever (NICE NG143), fever &ge;5 days (NICE NG143), fever with immunocompromise (NICE CG151), fever with meningeal signs (NICE NG240), mild viral fever (NHS).
 3. **Cough & Respiratory (R015–R018)**: Asthma/COPD exacerbation (NICE NG115), persistent cough >3 weeks (NICE NG12), elderly productive cough & fever (NICE QS110), mild viral bronchitis (NICE NG120).
 4. **Headache Cluster (R019–R023)**: Thunderclap headache (NICE CG150), scalp tenderness in older adult (NICE CKS), worsening headache with vomiting (NICE CG150), migraine pattern (NICE CG150), mild tension headache (NHS).
 5. **Abdominal Pain (R024–R028)**: Agonizing abdominal pain (NHS), abdominal pain in pregnancy (NHS/RCOG), right lower quadrant pain (NICE CKS Appendicitis), chronic pain >2 weeks in older adult (NICE NG12), mild transient cramps (NHS).
 6. **Diarrhoea & Dehydration (R029–R032)**: Severe dehydration/anuria (NHS), prolonged diarrhoea >7 days or bloody stool (NHS), gastroenteritis in infant <1 year (NICE CG84), mild acute diarrhoea (WHO/NHS).
 7. **Sore Throat (R033–R036)**: Inability to swallow/stridor (NICE CKS/NHS), severe sore throat with high fever (NICE NG84), persistent sore throat >10 days (NHS), mild viral cold sore throat (NHS).
-8. **Non-Red-Flag Chest Pain Variants (R037–R040)**: Pleuritic chest pain (NICE CKS), acid reflux burning (NICE CG184), atypical chest pain in diabetes/elderly (NICE CG95), chest wall tenderness (NHS).
+8. **Non-Red-Flag Chest Pain Variants (R037–R041)**: Pleuritic chest pain (NICE CKS), acid reflux burning (NICE CG184), chest discomfort in high-risk patients (NICE CG95), chest wall tenderness (NHS), atypical chest discomfort in diabetic/elderly patients (R041 restored).
 
-> **Verification Status**: Complete audit of all 40 rules is cataloged in [`docs/UNVERIFIED_RULES.md`](file:///c:/College/My%20Projects/Ai%20Project/health-triage-system/docs/UNVERIFIED_RULES.md). 16 rules are verified against directly opened guidelines; 24 rules that use engineering heuristics or generalizations are cataloged as UNVERIFIED pending team review.
+> **Verification Status**: Complete audit of all 41 rules is cataloged in [`docs/UNVERIFIED_RULES.md`](file:///c:/College/My%20Projects/Ai%20Project/health-triage-system/docs/UNVERIFIED_RULES.md). 16 rules are verified against directly opened guidelines; 25 rules that use engineering heuristics or generalizations are cataloged as UNVERIFIED pending team review.
 
 ---
 
@@ -53,7 +55,7 @@ The knowledge base (`backend/app/knowledge_base/rules.py`) contains **40 clinica
 | **Frontend** | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4 | Responsive UI, adaptive backward-chaining questionnaire, multi-tier result styling |
 | **Icons & Design** | Lucide React, Geist Fonts | Modern accessible UI components |
 | **AI Reasoning** | Hand-crafted Forward Chaining, Backward Chaining, MYCIN Certainty Factors | Pure Python rule engine without third-party black-box libraries |
-| **Test Suite** | Pytest, FastAPI TestClient, AnyIO | 53 automated unit and end-to-end clinical benchmark tests |
+| **Test Suite** | Pytest, FastAPI TestClient, AnyIO | 71 automated unit and end-to-end clinical benchmark tests |
 
 ---
 
@@ -141,7 +143,7 @@ In your activated backend terminal:
 python -m pytest -v
 ```
 
-All 53 unit and clinical benchmark tests pass with 100% green coverage. Full pass/fail details are logged in [`docs/TEST_REPORT.md`](file:///c:/College/My%20Projects/Ai%20Project/health-triage-system/docs/TEST_REPORT.md).
+All 71 unit, region, certainty, and clinical benchmark tests pass with 100% green coverage. Full pass/fail details are logged in [`docs/TEST_REPORT.md`](file:///c:/College/My%20Projects/Ai%20Project/health-triage-system/docs/TEST_REPORT.md).
 
 ### 3. Start the Frontend Application
 Open a second terminal window:
@@ -160,22 +162,30 @@ Open `http://localhost:3000` in your web browser. The frontend automatically rea
 ## 6. API Reference
 
 ### `POST /api/triage`
-Evaluates a patient's reported symptoms, warning signs, duration, severity, and risk factors.
+Evaluates a patient's reported symptoms, warning signs, duration, severity, risk factors, region, and optional uncertainty flags.
 
 **Request Payload:**
 ```json
 {
   "age": 28,
-  "symptoms": ["abdominal_pain"],
+  "symptoms": ["abdominal_pain", "mild nausea"],
   "warning_signs": [],
+  "uncertain_symptoms": ["mild nausea"],
+  "uncertain_warning_signs": [],
   "duration_hours": 6,
   "severity": 6,
   "medical_history": [],
   "risk_factors": ["pregnancy"],
   "vital_signs": {},
-  "additional_information": "Acute lower pelvic cramps."
+  "additional_information": "Acute lower pelvic cramps.",
+  "region": "IN"
 }
 ```
+
+*New & Optional Fields*:
+- `region`: Patient jurisdiction (default `"IN"` -> 112 / 108 ambulance; also `"GB"` -> 999, `"US"` -> 911, `"AU"` -> 000, `"CA"` -> 911).
+- `uncertain_symptoms`: Symptoms reported as "Not sure" (assigned premise CF 0.50).
+- `uncertain_warning_signs`: Red flags marked "Not sure" (suppresses immediate 999 override, strictly enforces `urgent_care_today` floor with safety advisory).
 
 **Response Payload:**
 ```json
@@ -183,6 +193,8 @@ Evaluates a patient's reported symptoms, warning signs, duration, severity, and 
   "tier": "urgent_care_today",
   "outcome": "urgent_care_today",
   "certainty_score": 0.90,
+  "emergency_number": "112",
+  "region": "IN",
   "fired_rules": [
     {
       "rule_id": "R025",
@@ -191,6 +203,10 @@ Evaluates a patient's reported symptoms, warning signs, duration, severity, and 
       "certainty_factor": 0.90,
       "source": "NHS & RCOG Clinical Guidance | URL: https://www.nhs.uk/pregnancy/related-conditions/common-symptoms/stomach-pain/",
       "matched_conditions": ["symptom:abdominal_pain", "risk:pregnancy"],
+      "premise_cfs": {
+        "symptom:abdominal_pain": 1.0,
+        "risk:pregnancy": 1.0
+      },
       "explanation": "Abdominal pain during pregnancy requires urgent same-day obstetric evaluation."
     }
   ],
@@ -203,7 +219,7 @@ Evaluates a patient's reported symptoms, warning signs, duration, severity, and 
   },
   "explanation": "URGENT CARE: Significant acute symptoms or high-risk clinical factors were detected. Same-day clinical evaluation is strongly recommended.",
   "rule_by_rule_explanation": [
-    "Rule R025 fired because symptom:abdominal_pain, risk:pregnancy, giving tier 'urgent_care_today' with certainty 0.90."
+    "Rule R025 fired because symptom:abdominal_pain (CF: 1.00), risk:pregnancy (CF: 1.00), giving tier 'urgent_care_today' with resulting CF 0.90."
   ],
   "disclaimer": "Academic prototype only. This expert system is NOT a diagnostic tool."
 }
