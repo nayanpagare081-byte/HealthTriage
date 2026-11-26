@@ -63,7 +63,6 @@ The knowledge base (`backend/app/knowledge_base/rules.py`) contains **41 clinica
 
 ```text
 HealthTriage/
-├── AUDIT.md                          # Initial codebase audit against course rubric
 ├── README.md                         # Project documentation and user guide
 ├── backend/
 │   ├── app/
