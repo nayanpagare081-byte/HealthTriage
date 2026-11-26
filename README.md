@@ -43,7 +43,7 @@ The knowledge base (`backend/app/knowledge_base/rules.py`) contains **41 clinica
 7. **Sore Throat (R033–R036)**: Inability to swallow/stridor (NICE CKS/NHS), severe sore throat with high fever (NICE NG84), persistent sore throat >10 days (NHS), mild viral cold sore throat (NHS).
 8. **Non-Red-Flag Chest Pain Variants (R037–R041)**: Pleuritic chest pain (NICE CKS), acid reflux burning (NICE CG184), chest discomfort in high-risk patients (NICE CG95), chest wall tenderness (NHS), atypical chest discomfort in diabetic/elderly patients (R041 restored).
 
-> **Verification Status**: Complete audit of all 41 rules is cataloged in [`docs/UNVERIFIED_RULES.md`](file:///c:/College/My%20Projects/Ai%20Project/health-triage-system/docs/UNVERIFIED_RULES.md). 16 rules are verified against directly opened guidelines; 25 rules that use engineering heuristics or generalizations are cataloged as UNVERIFIED pending team review.
+> **Verification Status**: Across all 41 rules, 16 rules are verified against directly opened guidelines and 25 rules that use engineering heuristics or generalizations are tagged as `UNVERIFIED` pending team review.
 
 ---
 
@@ -65,11 +65,6 @@ The knowledge base (`backend/app/knowledge_base/rules.py`) contains **41 clinica
 HealthTriage/
 ├── AUDIT.md                          # Initial codebase audit against course rubric
 ├── README.md                         # Project documentation and user guide
-├── docs/
-│   ├── DESIGN_NOTES.md               # Clinical rationale: patient audience, overrides, chaining
-│   ├── REFERENCES.md                 # Bibliography of all NHS, NICE, WHO, RCOG guidelines
-│   ├── TEST_REPORT.md                # 20 clinical benchmark test results and execution log
-│   └── UNVERIFIED_RULES.md           # Rule verification audit table (Verified vs UNVERIFIED)
 ├── backend/
 │   ├── app/
 │   │   ├── inference/
@@ -143,7 +138,7 @@ In your activated backend terminal:
 python -m pytest -v
 ```
 
-All 71 unit, region, certainty, and clinical benchmark tests pass with 100% green coverage. Full pass/fail details are logged in [`docs/TEST_REPORT.md`](file:///c:/College/My%20Projects/Ai%20Project/health-triage-system/docs/TEST_REPORT.md).
+All 71 unit, region, certainty, and clinical benchmark tests pass with 100% green coverage.
 
 ### 3. Start the Frontend Application
 Open a second terminal window:
@@ -234,4 +229,4 @@ Adaptive backward-chaining question selector. Takes current partial facts and an
 
 1. **Non-Diagnostic Scope**: The system reasons about navigation urgency, not disease etiology. It does not perform differential diagnosis.
 2. **Subjective Patient Inputs**: Relies on self-reported symptoms and pain severity scores (1–10). In real-world clinical practice, triage requires physical examination, auscultation, and objective vital sign monitors.
-3. **Unverified Rules Protocol**: As documented in [`docs/UNVERIFIED_RULES.md`](file:///c:/College/My%20Projects/Ai%20Project/health-triage-system/docs/UNVERIFIED_RULES.md), rules that generalize narrower clinical guidelines or rely on engineering duration/severity cutoffs are tagged as UNVERIFIED and must receive formal clinical committee review prior to any real-world pilot.
+3. **Unverified Rules Protocol**: Rules that generalize narrower clinical guidelines or rely on engineering duration/severity cutoffs are tagged as `UNVERIFIED` in `rules.py` and must receive formal clinical committee review prior to any real-world pilot.

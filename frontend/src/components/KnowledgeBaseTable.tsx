@@ -216,7 +216,7 @@ export default function KnowledgeBaseTable() {
           <span className="flex items-center gap-1.5">
             <ShieldAlert className="h-4 w-4 text-amber-500" />
             <span>
-              All rules cite published guidelines from the NHS, NICE, WHO, and RCOG. Unverified rules are logged in docs/UNVERIFIED_RULES.md.
+              All rules cite published guidelines from the NHS, NICE, WHO, and RCOG. Rules using heuristic cutoffs are marked as UNVERIFIED pending clinical review.
             </span>
           </span>
         </div>
